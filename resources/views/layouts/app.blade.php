@@ -98,6 +98,7 @@
     </div>
   </div>
 </div>
+
  <style>
     .modal.left .modal-dialog {
     position: absolute;

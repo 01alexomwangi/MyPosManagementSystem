@@ -37,4 +37,15 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+    //   /**
+    //  * The user has been authenticated.
+    //  * This is called automatically after login.
+    //  */
+    // protected function authenticated(Request $request, $user)
+    // {
+    //     // Save current session ID for kicking out later
+    //     $user->session_id = session()->getId();
+    //     $user->save();
+    // }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\User;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -13,7 +15,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $users = User::paginate(5);
+
+        return view('users.index',['users' =>$users]);
     }
 
     /**
@@ -34,7 +38,15 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $users = new User;
+          $users->name = $request->name;
+          $users->email = $request->email;
+          $users->password = Hash::make($request->password ?? $request->name);//always hash
+          $users->is_admin = $request->is_admin;
+        if($users->save()) {
+           return redirect()->back()->with('success','User Created Successfully');
+        }
+          return redirect()->back()->with('error','User Fail Created');
     }
 
     /**
@@ -68,7 +80,12 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+         $users = User::find($id);
+         if(!$users) {
+            return back()->with('Error','User not Found');
+         }
+         $users->update($request->all());
+         return back()->with('success','User Updated Successfully!');
     }
 
     /**
@@ -79,6 +96,11 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+         $users = User::find($id);
+         if(!$users) {
+            return back()->with('Error','User not Found');
+         }
+         $users->delete();
+         return back()->with('success','User Deleted Successfully!');
     }
 }
