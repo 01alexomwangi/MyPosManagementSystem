@@ -25,9 +25,10 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                <th>No</th>
                                 <th>Product Name</th>
-                                <th>Brand</th>
+                                <th>Category</th> 
+                                <th>Brand</th> 
                                 <th>Price</th>
                                 <th>Quantity</th>     
                                 <th>Alert stock</th>
@@ -40,7 +41,8 @@
 
                                 <td>{{ $key+1 }}</td>
                                 <td>{{ $product->product_name}}</td>
-                                <td>{{ $product->brand}}</td>
+                                <td>{{ $product->category->name ?? '-' }}</td>
+                                <td>{{ $product->brand->name ?? 'No Brand' }}</td>
                                 <td>{{ number_format($product->price,2) }}</td>
                                 <td>{{ $product->quantity}}</td>
                                 <td>
@@ -118,17 +120,17 @@
 
                                    {{--Modal of edit product Details--}}
  <div class="modal right fade" id="deleteproduct{{ $product->id }}"  data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
+   <div class="modal-dialog">
+     <div class="modal-content">
+       <div class="modal-header">
         <h4 class="modal-title" id="staticBackdropLabel">Delete product</h4>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
-        </button>
-       {{ $product->id }}
-      </div>
-      <div class="modal-body">
-          <form action="{{ route('products.destroy', $product->id) }}" method="post">
+          </button>
+          {{ $product->id }}
+           </div>
+            <div class="modal-body">
+             <form action="{{ route('products.destroy', $product->id) }}" method="post">
             @csrf
             @method('delete')
 
@@ -169,9 +171,8 @@
 
 </div>
 
-    {{--Modal of adding new product--}}
-         {{--Modal--}}
- <div class="modal right fade" id="addproduct" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  {{-- Modal of adding new product --}}
+<div class="modal right fade" id="addproduct" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -182,57 +183,138 @@
       </div>
 
       <div class="modal-body">
-          <form action="{{ route('products.store')}}" method="post">
-            @csrf
-            <div class="form-group">
-                <label for="">Product Name</label>
-                <input type="text" name="product_name" id="" class="form-control">
+        <form action="{{ route('products.store')}}" method="post">
+          @csrf
+          
+          <div class="form-group">
+            <label for="">Product Name</label>
+            <input type="text" name="product_name" class="form-control" required>
+          </div>
+
+            {{--add category--}}        
+  <div class="form-group">
+    <label for="">Category</label>
+      <div class="input-group">
+        <select name="category_id" class="form-control" required>
+            <option value="">-- Select Category --</option>
+            @foreach($categories as $category)
+                <option value="{{ $category->id }}">{{ $category->name }}</option>
+            @endforeach
+        </select>
+        <div class="input-group-append">
+            <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#addCategoryModal">
+                + Add Category
+            </button>
+        </div>
+      </div>
+    </div>
+
+{{-- add brand--}}
+          <div class="form-group">
+            <label for="">Brand</label>
+            <div class="input-group">
+              <select name="brand_id" id="brand" class="form-control" required>
+                <option value="">-- Select Brand --</option>
+                @foreach($brands as $brand)
+                  <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                @endforeach
+              </select>
+              <div class="input-group-append">
+                <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#addBrandModal">
+                  + Add Brand
+                </button>
+              </div>
             </div>
-             <div class="form-group">
-                <label for="">Brand</label>
-                <input type="text" name="brand" id="" class="form-control">
-            </div>
-            
-             <div class="form-group">
-                <label for="">Price</label>
-                <input type="number" name="price" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">Quantity</label>
-                <input type="number" name="quantity" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">Alert Stock</label>
-                <input type="number" name="alert_stock" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">description</label>
-                <textarea name="description" id="" cols="30" rows="2" class="form-control"></textarea>
-                
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn btn-primary btn-block">Save Product</button>
-            </div>
-          </form>
+          </div>
+
+
+
+          <div class="form-group">
+            <label for="">Price</label>
+            <input type="number" name="price" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="">Quantity</label>
+            <input type="number" name="quantity" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="">Alert Stock</label>
+            <input type="number" name="alert_stock" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="">Description</label>
+            <textarea name="description" cols="30" rows="2" class="form-control"></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary btn-block">Save Product</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
 
-     <style>
-        .modal.right .modal-dialog{
-            /*position:absolute;*/
+     {{-- Add Category Modal (outside Add Product modal) --}}
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCategoryLabel">Add Category</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ route('categories.store') }}" method="POST">
+          @csrf
+          <div class="form-group">
+            <label for="category_name">Category Name</label>
+            <input type="text" name="name" id="category_name" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Add Category</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
-            top: 0;
-            right: 0;
-            margin-right: 19vh;
-        }
 
-        .modal.fade:not(.in).right .modal-dialog{
-            -wekit-transform: translate3d(25%,0,0);
-            transform: translate3d(25%,0,0);
-        }
-     </style>
+{{-- Add Brand Modal (outside Add Product modal) --}}
+<div class="modal fade" id="addBrandModal" tabindex="-1" aria-labelledby="addBrandLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addBrandLabel">Add Brand</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ route('brands.store') }}" method="POST">
+          @csrf
+          <div class="form-group">
+            <label for="brand_name">Brand Name</label>
+            <input type="text" name="name" id="brand_name" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Add Brand</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<style>
+  .modal.right .modal-dialog {
+      top: 0;
+      right: 0;
+      margin-right: 19vh;
+  }
+
+  .modal.fade:not(.in).right .modal-dialog {
+      -webkit-transform: translate3d(25%,0,0);
+      transform: translate3d(25%,0,0);
+  }
+</style>
 @endsection

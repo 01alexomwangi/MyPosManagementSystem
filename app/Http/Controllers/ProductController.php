@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Brand;
 use App\Product;
+use App\Category;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -12,12 +14,15 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+   public function index()
     {
-        $products = Product::paginate(5);
-
-        return view('products.index',['products' => $products]);
+    $products = Product::paginate(5);
+    // dd($products);
+    $brands = Brand::orderBy('name')->get();
+    $categories = Category::orderBy('name')->get();
+    return view('products.index', compact('products', 'brands','categories'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -35,11 +40,32 @@ class ProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-         Product::create($request->all());
-         return redirect()->back()->with('success','Product Created Successfully!');
-    }
+    
+ public function store(Request $request)
+{
+    $request->validate([
+        'product_name' => 'required',
+        'brand_id' => 'required|exists:brands,id',
+        'price' => 'required|numeric',
+        'quantity' => 'required|integer',
+        'alert_stock' => 'required|integer',
+        'description' => 'nullable|string',
+    ]);
+
+    Product::create([
+        'product_name' => $request->product_name,
+        'category_id' => $request->category_id,
+        'brand_id' => $request->brand_id,
+        'price' => $request->price,
+        'quantity' => $request->quantity,
+        'alert_stock' => $request->alert_stock,
+        'description' => $request->description,
+    ]);
+
+    return redirect()->back()->with('success', 'Product added successfully');
+}
+
+
 
     /**
      * Display the specified resource.

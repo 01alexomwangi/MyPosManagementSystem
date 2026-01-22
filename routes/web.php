@@ -1,15 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\OrderController;
+use App\User;  // <-- NOT App\Models\User
 use App\Http\Controllers\CompanyController;
+
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
-
-use App\User;  // <-- NOT App\Models\User
-use Illuminate\Support\Facades\Session;
 
 
 
@@ -38,6 +40,9 @@ Route::resource('/suppliers','SupplierController');// suppliers.index
 Route::resource('/users','UserController');// users.index
 Route::resource('/companies','CompanyController');// companies.index
 Route::resource('/transactions','TransactionController');// transactions.index
+Route::resource('/brands', 'BrandController');
+Route::resource('/categories', 'CategoryController');
+
 
 
 // Route::get('/kick-user/{id}', function ($id) {
