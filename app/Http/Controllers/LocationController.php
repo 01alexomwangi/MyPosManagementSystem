@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Order;
-use App\Product;
+use App\Location;
 use Illuminate\Http\Request;
 
-
-
-class OrderController extends Controller
+class LocationController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,9 +14,7 @@ class OrderController extends Controller
      */
     public function index()
     {
-        $products = Product::all();
-        $orders = Order::all();
-        return view('orders.index',['products' => $products,'orders' => $orders]);
+        //
     }
 
     /**
@@ -29,7 +24,7 @@ class OrderController extends Controller
      */
     public function create()
     {
-        //
+        
     }
 
     /**
@@ -38,18 +33,34 @@ class OrderController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        //
+
+      public function store(Request $request)
+   {
+   
+
+    // 1️⃣ Validate input
+    $request->validate([
+        'name' => 'required|string|unique:locations,name',
+    ]);
+
+    // 2️⃣ Save location
+    Location::create([
+        'name' => $request->name,
+    ]);
+
+    // 3️⃣ Redirect back with success message
+    return redirect()->back()->with('success', 'Location added successfully!');
+
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Order  $order
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Order $order)
+    
+    public function show($id)
     {
         //
     }
@@ -57,10 +68,10 @@ class OrderController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Order  $order
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Order $order)
+    public function edit($id)
     {
         //
     }
@@ -69,23 +80,25 @@ class OrderController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Order  $order
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Order $order)
+    public function update(Request $request, $id)
     {
-        //
+        $location = Location::findOrFail($id);
+       $location->update([
+        'name' => $request->name, // This changes the location name itself
+         ]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Order  $order
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Order $order)
+    public function destroy($id)
     {
         //
     }
- 
 }

@@ -6,14 +6,14 @@
     <div class="row">
 
         <!-- LEFT SIDE: productS TABLE -->
-        <div class="col-md-9">
+        <div class="col-md-8">
             <div class="card">
 
                 <div class="card-header d-flex justify-content-between align-items-center"> 
                     <h4 style="float: left">Order Products</h4>
 
                     <span>
-                        <i class="fa fa-orders"></i> orders
+                        <i class="fa fa-orders"></i>  <strong><em>Orders</em></strong>
                     </span>
 
                     <a href="#" style="float: right" class="btn btn-sm btn-dark" data-toggle="modal" data-target="#addproduct">
@@ -36,12 +36,13 @@
                         </thead>
                         <tbody class="addMoreProduct"> 
                              <tr>
-                                <td>1</td>
+                                <td class="no">1</td>
                                 <td>
                                     
                         <select name="product_id[]" id="product_id" class="form-control product_id">
+                            <option value="">Select Item</option>
                             @foreach ($products as $product)
-                            <option data-price ="{{ $product->price }}"value="{{ $product->id }}"> {{ $product->product_name }}</option>    
+                            <option data-price ="{{ $product->price }}" value="{{ $product->id }}"> {{ $product->product_name }}</option>    
                             @endforeach
                         </select>            
                                 </td>
@@ -72,14 +73,66 @@
             </div>
         </div>
 
-        <!-- RIGHT SIDE: SEARCH product -->
-        <div class="col-md-3">
+        <!-- Head section -->
+
+        <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
                     <h4>Total <b class="total"> 0.00</b></h4>
                 </div>
                 <div class="card-body">
-                    ......................
+                    <div class="panel">
+                        <div class="row">
+                            <table class="table table-stripped">
+                                <tr>
+                                    <td>
+                               <label for="">Customer Name</label>
+                              
+                                <input type="text" name="customer_name" id="" class="form-control">
+                               </div>   
+                                    </td>
+                                    <td>
+                              <label for="">Customer Phone</label>
+                            
+                              <input type="number" name="customer_phone" id="" class="form-control">
+                              </div>
+                                    </td>
+                                </tr>
+                            </table>
+                          
+
+                            <td> Payment Method <br>
+                                <span class="radio-item">
+                                <input type="radio" name="payment_method" id="payment_method"
+                                 class="true" value="cash" checked="checked">
+                                 <label for="payment_method"> <i class="fa fa-money-bill text-success"> </i> Cash</label>
+                                </span>
+
+                                  <span class="radio-item">
+                                <input type="radio" name="payment_method" id="payment_method"
+                                 class="true" value="bank transfer" >
+                                 <label for="payment_method"> <i class="fa fa-university text-danger"> </i> Bank Transfer</label>
+                                </span>
+
+                                  <span class="radio-item">
+                                <input type="radio" name="payment_method" id="payment_method"
+                                 class="true" value="Credit Card" >
+                                 <label for="payment_method"> <i class="fa fa-credit-card text-info"> </i> Credit Card</label>
+                                </span>
+                            </td><br>
+
+                             <td> Payment 
+                                <input type="number" name="paid_amount" id="paid_amount" class="form-control">
+                             </td>
+
+                             <td>
+                                Returning change 
+                                <input type="number" readonly name="balance" id="paid_amount" class="form-control">
+                             </td>
+
+                        </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -168,9 +221,9 @@
         var tr = '<tr><td class "no">' + numberofrow + '</td>' +
             '<td><select class="form-control product_id" name= "product_id[]">'+ product +
                 ' </select></td>' +
-                '<td><input type="number" name="quantity[]" class="form-control"> </td>'+
-                '<td><input type="number" name="price[]" class="form-control"> </td>'+
-                '<td><input type="number" name="discount[]" class="form-control"> </td>'+
+                '<td><input type="number" name="quantity[]" class="form-control quantity"> </td>'+
+                '<td><input type="number" name="price[]" class="form-control price"> </td>'+
+                '<td><input type="number" name="discount[]" class="form-control discount"> </td>'+
                 '<td><input type="number" name="total_amount[]" class="form-control total_amount"> </td>'+
                 '<td> <a class="btn btn-danger btn-sm delete rounded-circle"> <i class="fa fa-times-circle" </a></td>';
                 $('.addMoreProduct').append(tr); 
@@ -200,8 +253,19 @@
         var disc = tr.find('.discount').val() - 0;
         var price = tr.find('.price').val() - 0;
         var total_amount = (qty * price) - ((qty * price * disc) /100 );
-        tr.find('total_amount').val(total_amount);
+        tr.find('.total_amount').val(total_amount);
         TotalAmount();
     })
+
+    $('.addMoreProduct').delegate('.quantity, .discount','keyup',function(){
+        var tr = $(this).parent().parent();
+        var qty = tr.find('.quantity').val() - 0;
+        var disc = tr.find('.discount').val() - 0;
+        var price = tr.find('.price').val() - 0;
+        var total_amount = (qty * price) - ((qty * price * disc) /100 );
+        tr.find('.total_amount').val(total_amount);
+        TotalAmount();
+    })
+
     </script>
  @endsection

@@ -1,73 +1,176 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Little</title>
 
-@section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Login') }}</div>
+    <style>
+        @keyframes slideInRight {
+            from {
+                transform: translateX(60px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
 
-                <div class="card-body">
-                    <form method="POST" action="{{ route('login') }}">
-                        @csrf
+        /* RESET */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-                        <div class="form-group row">
-                            <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            background: #f5f6f8;
+        }
 
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+        /* LEFT SIDE (LOGO) */
+        .left {
+            flex: 1;
+            background: #555555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                        </div>
+        .left img {
+            max-width: 300px;
+            opacity: 0.9;
+        }
 
-                        <div class="form-group row">
-                            <label for="password" class="col-md-4 col-form-label text-md-right">{{ __('Password') }}</label>
+        /* RIGHT SIDE (LOGIN) with Africa background */
+        .right {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('/images/africa.png') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
 
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+        /* overlay for readability */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 246, 248, 0.85);
+        }
 
-                                @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                        </div>
+        .login-card {
+            position: relative;
+            background: #ffffff;
+            padding: 40px;
+            width: 360px;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            z-index: 1; /* keep on top of overlay */
+        }
 
-                        <div class="form-group row">
-                            <div class="col-md-6 offset-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
 
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+        /* ERROR MESSAGE */
+        .error {
+            background: #ffecec;
+            color: #b00000;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
 
-                        <div class="form-group row mb-0">
-                            <div class="col-md-8 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Login') }}
-                                </button>
+        /* INPUTS */
+        .login-card input {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
 
-                                @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
-                                        {{ __('Forgot Your Password?') }}
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        .login-card input:focus {
+            outline: none;
+            border-color: #f0b400;
+        }
+
+        /* BUTTON */
+        .login-card button {
+            width: 100%;
+            padding: 12px;
+            background: #f0b400;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .login-card button:hover {
+            background: #d9a200;
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .left {
+                height: 35vh;
+            }
+
+            .right {
+                height: 65vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LEFT: LOGO -->
+    <div class="left">
+        <img src="/images/little.png" alt="Little Logo">
+    </div>
+
+    <!-- RIGHT: LOGIN with Africa background -->
+    <div class="right">
+        <!-- overlay for readability -->
+        <div class="overlay"></div>
+
+        <div class="login-card">
+            <h2>Little Login</h2>
+
+            @if ($errors->any())
+                <div class="error">{{ $errors->first() }}</div>
+            @endif
+
+            <form method="POST" action="{{ url('/login') }}">
+                @csrf
+
+                <input type="email" name="email" placeholder="Email" value="{{ old('email') }}" required>
+                <input type="password" name="password" placeholder="Password" required>
+
+                <button type="submit">Login</button>
+            </form>
         </div>
     </div>
-</div>
-@endsection
+
+</body>
+</html>
+
+

@@ -11,7 +11,7 @@ class Product extends Model
    protected $fillable = ['product_name', 'price',
                            'alert_stock','quantity',
                            'brand_id','category_id',
-                           'description'];
+                           'description','location_id',];
 
 
 
@@ -27,5 +27,12 @@ class Product extends Model
           {
          return $this->belongsTo(Category::class);
           }   
+
+
+          public function location()
+         {
+            return $this->belongsTo(Location::class);
+         }
+
 
 }

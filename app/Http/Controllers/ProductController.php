@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Brand;
 use App\Product;
 use App\Category;
+use App\Location;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -16,11 +17,31 @@ class ProductController extends Controller
      */
    public function index()
     {
-    $products = Product::paginate(5);
-    // dd($products);
+       $user = auth()->user();
+
+    if ($user->isAdmin()) {
+        // Admin sees all products
+        $products = Product::with('location')->paginate(8);
+        $locations = Location::orderBy('name')->get();
+    } else {
+        // User sees only products in their location
+        $products = Product::where('location_id', $user->location_id)
+                           ->with('location')
+                           ->paginate(8);
+
+        // User should only see their location
+        $locations = Location::where('id', $user->location_id)->get();
+    }
+
     $brands = Brand::orderBy('name')->get();
     $categories = Category::orderBy('name')->get();
-    return view('products.index', compact('products', 'brands','categories'));
+
+    return view('products.index', compact(
+        'products',
+        'brands',
+        'categories',
+        'locations'
+    ));
     }
 
 
@@ -45,6 +66,7 @@ class ProductController extends Controller
 {
     $request->validate([
         'product_name' => 'required',
+        'location_id' => 'nullable|exists:locations,id',
         'brand_id' => 'required|exists:brands,id',
         'price' => 'required|numeric',
         'quantity' => 'required|integer',
@@ -54,6 +76,7 @@ class ProductController extends Controller
 
     Product::create([
         'product_name' => $request->product_name,
+        'location_id' => $request->location_id,
         'category_id' => $request->category_id,
         'brand_id' => $request->brand_id,
         'price' => $request->price,
@@ -115,4 +138,6 @@ class ProductController extends Controller
 
         return redirect()->back()->with('success','Product Deleted successfully!');
     }
+
+ 
 }

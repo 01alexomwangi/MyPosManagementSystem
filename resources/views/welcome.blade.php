@@ -1,100 +1,187 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>POS Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+    <style>
+        @keyframes slideInRight {
+            from {
+                transform: translateX(60px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
 
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;600&display=swap" rel="stylesheet">
+        /* RESET */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        <!-- Styles -->
-        <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: 'Nunito', sans-serif;
-                font-weight: 200;
-                height: 100vh;
-                margin: 0;
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            background: #f5f6f8;
+        }
+
+        /* LEFT SIDE (LOGO) */
+        .left {
+            flex: 1;
+            background: #555555;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .left img {
+            max-width: 300px;
+            opacity: 0.9;
+        }
+
+        /* RIGHT SIDE (POS card) with Africa background */
+        .right {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('/images/africa.png') no-repeat center center;
+            background-size: cover;
+            position: relative;
+        }
+
+        /* overlay for readability */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 246, 248, 0.85);
+        }
+
+        .pos-card {
+            position: relative;
+            background: #ffffff;
+            padding: 40px;
+            width: 380px;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            z-index: 1;
+            text-align: center;
+        }
+
+        .pos-card h2 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        .pos-card p {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .pos-card a, .pos-card button {
+            display: block;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .pos-card a.btn-primary {
+            background: #008bbb;
+            color: white;
+        }
+
+        .pos-card a.btn-primary:hover {
+            background: #006f94;
+        }
+
+        .pos-card a.btn-secondary,
+        .pos-card button.btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+        }
+
+        .pos-card a.btn-secondary:hover,
+        .pos-card button.btn-secondary:hover {
+            background: #565e64;
+        }
+
+        .pos-card form button {
+            width: 100%;
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
             }
 
-            .full-height {
-                height: 100vh;
+            .left {
+                height: 35vh;
             }
 
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
+            .right {
+                height: 65vh;
             }
+        }
+    </style>
+</head>
+<body>
 
-            .position-ref {
-                position: relative;
-            }
+    <!-- LEFT: LOGO -->
+    <div class="left">
+        <img src="/images/little.png" alt="Little Logo">
+    </div>
 
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
-            }
+    <!-- RIGHT: POS CARD with Africa background -->
+    <div class="right">
+        <!-- overlay for readability -->
+        <div class="overlay"></div>
 
-            .content {
-                text-align: center;
-            }
+        <div class="pos-card">
+            <h2><strong>Little POS System</strong></h2>
 
-            .title {
-                font-size: 84px;
-            }
+            @auth
+                <p>Welcome back, <strong>{{ auth()->user()->name }}</strong></p>
 
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
-            }
+                <a href="{{ url('/dashboard') }}" class="btn-primary">
+                    Go to Dashboard
+                </a>
 
-            .m-b-md {
-                margin-bottom: 30px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="flex-center position-ref full-height">
-            @if (Route::has('login'))
-                <div class="top-right links">
-                    @auth
-                        <a href="{{ url('/home') }}">Home</a>
-                    @else
-                        <a href="{{ route('login') }}">Login</a>
+                <form action="{{ url('/logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn-secondary">
+                        Logout
+                    </button>
+                </form>
+            @endauth
 
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}">Register</a>
-                        @endif
-                    @endauth
-                </div>
-            @endif
+            @guest
+                <p><em>Please login to continue</em></p>
 
-            <div class="content">
-                <div class="title m-b-md">
-                    Laravel
-                </div>
+                <a href="{{ url('/login') }}" class="btn-primary">
+                    Login
+                </a>
 
-                <div class="links">
-                    <a href="https://laravel.com/docs">Docs</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://blog.laravel.com">Blog</a>
-                    <a href="https://nova.laravel.com">Nova</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://vapor.laravel.com">Vapor</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
-                </div>
-            </div>
+                <a href="{{ url('/register') }}" class="btn-secondary">
+                    Register
+                </a>
+            @endguest
         </div>
-    </body>
+    </div>
+
+</body>
 </html>
