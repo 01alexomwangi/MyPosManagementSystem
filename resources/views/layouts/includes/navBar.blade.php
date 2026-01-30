@@ -27,10 +27,14 @@
                         <a href="{{ route('users.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-user"></i> Users
                         </a>
+                          <a href="{{ route('reports.daily-sales') }}"
+                          class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                           <i class="fa fa-chart-line"></i> Reports
+                         </a>
           
-                        <a href="#" class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                        {{-- <a href="#" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-file"></i> Reports
-                        </a>
+                        </a> --}}
                         <a href="#" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-money-bill"></i> Transactions
                         </a>
@@ -40,9 +44,9 @@
                         <a href="#" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-users"></i> Customers
                         </a>
-                        <a href="#" class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                        {{-- <a href="#" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-user-group"></i> Incoming
-                        </a>
+                        </a> --}}
 
                          <a href="{{ route('orders.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-laptop"></i> Cashier
@@ -50,13 +54,26 @@
                         <a href="{{ route('products.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-box"></i> Products
                         </a>
+
+                         <a href="{{ route('sales.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                         <i class="fa fa-cash-register"></i> Sales
+                        </a>
                         @else 
+
+                        <a href="{{ route('reports.daily-sales') }}"
+                         class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                         <i class="fa fa-chart-line"></i> My Sales
+                         </a>
 
                         <a href="{{ route('orders.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-laptop"></i> Cashier
                         </a>
                         <a href="{{ route('products.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
                             <i class="fa fa-box"></i> Products
+                        </a>
+
+                        <a href="{{ route('sales.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                         <i class="fa fa-cash-register"></i> Sales
                         </a>
 
                          @endif

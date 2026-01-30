@@ -157,9 +157,9 @@
             @auth
                 <p>Welcome back, <strong>{{ auth()->user()->name }}</strong></p>
 
-                <a href="{{ url('/dashboard') }}" class="btn-primary">
-                    Go to Dashboard
-                </a>
+                <a href="{{ url('/home') }}" class="btn-primary">
+                    Go to Home
+                </a>    <!-- reference to dashboard -->
 
                 <form action="{{ url('/logout') }}" method="POST">
                     @csrf

@@ -34,5 +34,11 @@ class Product extends Model
             return $this->belongsTo(Location::class);
          }
 
+         public function saleItems()
+          {
+         return $this->hasMany(SaleItem::class);
+          }
+
+           //$product->saleItems  // all SaleItem rows that reference this product
 
 }

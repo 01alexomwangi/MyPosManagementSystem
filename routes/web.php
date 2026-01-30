@@ -4,14 +4,15 @@ use App\User;
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BrandController;
-use App\Http\Controllers\OrderController;
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CategoryController;
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
@@ -36,12 +37,18 @@ Route::middleware('auth')->group(function () {
         return view('home');
     });
 
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+     Route::get(
+        '/reports/daily-sales',
+        'ReportController@dailySales'
+    )->name('reports.daily-sales');
     // Protected resources
     Route::resource('/orders','OrderController');
     Route::resource('/products','ProductController');
     Route::resource('/locations', 'LocationController');
+    Route::resource('/sales', 'SaleController');
    
   });
 
