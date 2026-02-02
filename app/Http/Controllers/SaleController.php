@@ -72,7 +72,7 @@ class SaleController extends Controller
         foreach ($request->items as $item) {
             $product = Product::findOrFail($item['product_id']);
 
-            $product->decrement('quantity', $item['quantity']);
+            $product->decrement('quantity', $item['quantity']);//reduce stock happens here
 
             SaleItem::create([
                 'sale_id' => $sale->id,

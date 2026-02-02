@@ -11,9 +11,13 @@
 
                 <div class="card-header d-flex justify-content-between align-items-center"> 
                     <h4>Users</h4>
-                    <a href="#" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addUser">
-                        <i class="fa fa-plus"></i> Add New User
-                    </a>
+                    @auth
+                        @if(auth()->user()->isAdmin())
+                            <a href="#" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addUser">
+                                <i class="fa fa-plus"></i> Add New User
+                            </a>
+                        @endif
+                    @endauth
                 </div>
 
                 <div class="card-body">
@@ -35,15 +39,19 @@
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td>{{ $user->location->name ?? '-' }}</td>
-                                <td>{{ $user->is_admin ? 'Admin' : 'Cashier' }}</td>
+                                <td>{{ $user->role ?? ($user->is_admin ? 'Admin' : 'Cashier') }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="#" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editUser{{ $user->id }}">
-                                            <i class="fa fa-edit"></i>Edit
-                                        </a>
-                                        <a href="#" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteUser{{ $user->id }}">
-                                            <i class="fa fa-trash"></i>Del
-                                        </a>
+                                        @auth
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="#" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editUser{{ $user->id }}">
+                                                <i class="fa fa-edit"></i> Edit
+                                            </a>
+                                            <a href="#" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteUser{{ $user->id }}">
+                                                <i class="fa fa-trash"></i> Del
+                                            </a>
+                                        @endif
+                                        @endauth
                                     </div>
                                 </td>
                             </tr>
@@ -75,9 +83,10 @@
                                         </div>
                                         <div class="form-group">
                                             <label>Role</label>
-                                            <select name="is_admin" class="form-control">
-                                                <option value="1" {{ $user->is_admin ? 'selected' : '' }}>Admin</option>
-                                                <option value="0" {{ !$user->is_admin ? 'selected' : '' }}>Cashier</option>
+                                            <select name="role" class="form-control" required>
+                                                <option value="cashier" {{ $user->role=='cashier' ? 'selected' : '' }}>Cashier</option>
+                                                <option value="manager" {{ $user->role=='manager' ? 'selected' : '' }}>Branch Manager</option>
+                                                <option value="admin" {{ $user->role=='admin' ? 'selected' : '' }}>Admin</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
@@ -181,29 +190,29 @@
                 <label>Confirm Password</label>
                 <input type="password" name="password_confirmation" class="form-control" required>
             </div>
-            <div class="form-group">
-                <label>Role</label>
-                <select name="is_admin" class="form-control">
-                    <option value="1">Admin</option>
-                    <option value="0">Cashier</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Location</label>
-                <div class="input-group">
-                    <select name="location_id" class="form-control" required>
-                        <option value="">-- Select Location --</option>
-                        @foreach($locations as $location)
-                            <option value="{{ $location->id }}">{{ $location->name }}</option>
-                        @endforeach
-                    </select>
-                    <div class="input-group-append">
-                        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#addLocationModal">
-                            + Add Location
-                        </button>
+            @auth
+                @if(auth()->user()->isAdmin())
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select name="role" class="form-control" required>
+                            <option value="cashier">Cashier</option>
+                            <option value="manager">Branch Manager</option>
+                            <option value="admin">Admin</option>
+                        </select>
                     </div>
-                </div>
-            </div>
+
+                    <div class="form-group">
+                        <label>Location</label>
+                        <select name="location_id" class="form-control" required>
+                            <option value="">-- Select Location --</option>
+                            @foreach($locations as $location)
+                                <option value="{{ $location->id }}">{{ $location->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+            @endauth
+
             <div class="modal-footer">
                 <button class="btn btn-primary btn-block">Save User</button>
             </div>

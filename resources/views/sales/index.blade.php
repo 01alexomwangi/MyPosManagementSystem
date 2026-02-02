@@ -5,22 +5,38 @@
 
     <div class="row">
 
-        <!-- LEFT SIDE: POS TABLE -->
+        <!-- LEFT SIDE: PRODUCTS GRID & CART TABLE -->
         <div class="col-md-9">
-            <div class="card">
 
-                <div class="card-header d-flex justify-content-between align-items-center"> 
-                    <h4>POS - Create Sale</h4>
-                    <a href="#" class="btn btn-sm btn-dark" data-toggle="modal" data-target="#addproduct">
-                        <i class="fa fa-plus"></i> Add New Product
-                    </a>
+            <!-- PRODUCTS GRID -->
+            <div class="row mb-4">
+                @foreach($products as $product)
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h5>{{ $product->product_name }}</h5>
+                            <p>Price: {{ number_format($product->price, 2) }}</p>
+                            <p>Stock: {{ $product->quantity }}</p>
+                            <button type="button" 
+                                    class="btn btn-success btn-sm add-to-cart"
+                                    data-id="{{ $product->id }}"
+                                    data-name="{{ $product->product_name }}"
+                                    data-price="{{ $product->price }}">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                @endforeach
+            </div>
 
+            <!-- CART TABLE -->
+            <div class="card">
+                <div class="card-header"><h4>Cart</h4></div>
                 <div class="card-body">
                     <form action="{{ route('sales.store') }}" method="POST">
                         @csrf
-
-                         <input type="hidden" name="location_id" value="{{ auth()->user()->location_id }}">     {{-- attach sale to location it happened  --}}
+                        <input type="hidden" name="location_id" value="{{ auth()->user()->location_id }}">
 
                         <table class="table table-bordered table-hover">
                             <thead>
@@ -30,27 +46,11 @@
                                     <th>Qty</th>
                                     <th>Price</th>
                                     <th>Total</th>
-                                    <th><button type="button" class="btn btn-sm btn-success add_more"><i class="fa fa-plus-circle"></i></button></th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody class="addMoreProduct">
-                                <tr>
-                                    <td class="no">1</td>
-                                    <td>
-                                        <select name="items[0][product_id]" class="form-control product_id">
-                                            <option value="">Select Product</option>
-                                            @foreach($products as $product)
-                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}">
-                                                    {{ $product->product_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="number" name="items[0][quantity]" class="form-control quantity" value="1" min="1"></td>
-                                    <td><input type="number" name="items[0][price]" class="form-control price" readonly></td>
-                                    <td><input type="number" name="items[0][total_amount]" class="form-control total_amount" readonly></td>
-                                    <td><button type="button" class="btn btn-danger btn-sm delete"><i class="fa fa-times-circle"></i></button></td>
-                                </tr>
+                                <!-- Products added via JS -->
                             </tbody>
                         </table>
 
@@ -75,8 +75,8 @@
                         </div>
                     </form>
                 </div>
-
             </div>
+
         </div>
 
         <!-- RIGHT SIDE: CUSTOMER INFO -->
@@ -111,81 +111,51 @@
 
 </div>
 
-{{-- Add Product Modal (same as your current products blade) --}}
-<div class="modal right fade" id="addproduct" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Add Product</h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
-      <div class="modal-body">
-          <form action="{{ route('products.store') }}" method="POST">
-              @csrf
-              <div class="form-group">
-                  <label>Product Name</label>
-                  <input type="text" name="product_name" class="form-control" required>
-              </div>
-              <div class="form-group">
-                  <label>Price</label>
-                  <input type="number" name="price" class="form-control" required>
-              </div>
-              <div class="form-group">
-                  <label>Quantity</label>
-                  <input type="number" name="quantity" class="form-control" required>
-              </div>
-              <div class="modal-footer">
-                  <button class="btn btn-primary btn-block">Save Product</button>
-              </div>
-          </form>
-      </div>
-    </div>
-  </div>
-  </div>
+@endsection
 
-  <style>
-  .modal.right .modal-dialog{
-    top: 0;
-    right: 0;
-    margin-right: 19vh;
-  }
-  .modal.fade:not(.in).right .modal-dialog{
-    transform: translate3d(25%,0,0);
-  }
-  </style>
-  @endsection
+@section('script')
+<script>
+$(document).ready(function(){
 
-  @section('script')
-   <script>
-  $(document).ready(function(){
+    // ADD PRODUCT TO CART
+    $('.add-to-cart').click(function(){
+        var id = $(this).data('id');
+        var name = $(this).data('name');
+        var price = $(this).data('price');
 
-    // ADD ROW
-    $('.add_more').click(function(){
-        var productHtml = $('.product_id').html();
         var rowCount = $('.addMoreProduct tr').length;
+
+        // Check if product already in cart
+        var exists = false;
+        $('.addMoreProduct tr').each(function(){
+            var pid = $(this).find('.product_id_hidden').val();
+            if(pid == id){
+                // increase quantity
+                var qtyInput = $(this).find('.quantity');
+                qtyInput.val(parseInt(qtyInput.val()) + 1);
+                updateRowTotal($(this));
+                exists = true;
+            }
+        });
+        if(exists) return;
+
         var tr = `<tr>
             <td class="no">${rowCount+1}</td>
-            <td><select name="items[${rowCount}][product_id]" class="form-control product_id">${productHtml}</select></td>
+            <td>${name}</td>
+            <input type="hidden" class="product_id_hidden" name="items[${rowCount}][product_id]" value="${id}">
             <td><input type="number" name="items[${rowCount}][quantity]" class="form-control quantity" value="1" min="1"></td>
-            <td><input type="number" name="items[${rowCount}][price]" class="form-control price" readonly></td>
-            <td><input type="number" name="items[${rowCount}][total_amount]" class="form-control total_amount" readonly></td>
+            <td><input type="number" name="items[${rowCount}][price]" class="form-control price" value="${price}" readonly></td>
+            <td><input type="number" name="items[${rowCount}][total_amount]" class="form-control total_amount" value="${price}" readonly></td>
             <td><button type="button" class="btn btn-danger btn-sm delete"><i class="fa fa-times-circle"></i></button></td>
         </tr>`;
         $('.addMoreProduct').append(tr);
+        calculateTotal();
     });
 
     // DELETE ROW
     $('.addMoreProduct').on('click', '.delete', function(){
         $(this).closest('tr').remove();
         calculateTotal();
-    });
-
-    // UPDATE PRICE & TOTAL WHEN PRODUCT CHANGES
-    $('.addMoreProduct').on('change', '.product_id', function(){
-        var tr = $(this).closest('tr');
-        var price = $('option:selected', this).data('price') || 0;
-        tr.find('.price').val(price);
-        updateRowTotal(tr);
     });
 
     // UPDATE TOTAL WHEN QUANTITY CHANGES
@@ -207,8 +177,7 @@
             total += parseFloat($(this).val()) || 0;
         });
         $('.total').text(total.toFixed(2));
-
-        $('#total_input').val(total.toFixed(2)); //added  shown to user,submitted to controller,storednin db
+        $('#total_input').val(total.toFixed(2));
 
         var paid = parseFloat($('input[name="paid_amount"]').val()) || 0;
         $('input[name="balance"]').val((paid - total).toFixed(2));
@@ -219,6 +188,6 @@
         calculateTotal();
     });
 
-    });
-    </script>
-    @endsection
+});
+</script>
+@endsection

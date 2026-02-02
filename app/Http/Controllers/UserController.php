@@ -3,106 +3,113 @@
 namespace App\Http\Controllers;
 
 use App\Location;
+use App\User;
 use Illuminate\Http\Request;
-use App\User; // your User model
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
     /**
-     * Show all users (admin only)
+     * Display a listing of users (admin only)
      */
     public function index()
     {
-        $users = User::with('location')->get(); // for single location
-        $locations = Location::all();
-        return view('users.index', compact('users','locations'));
-    }
-
-  
-    public function create()
-    {
-        return view('users.create');
-    }
-
-    public function edit($id)
-    {
-        $user = User::findOrFail($id);
-        return view('users.edit', compact('user'));
+        $users = User::with('location')->get(); // load location for display
+        $locations = Location::all();           // for dropdowns in modals
+        return view('users.index', compact('users', 'locations'));
     }
 
     /**
-     * Update a user
+     * Show the form for creating a new user
+     */
+    public function create()
+    {
+        $locations = Location::all();
+        return view('users.create', compact('locations'));
+    }
+
+    /**
+     * Store a newly created user in storage
+     */
+    public function store(Request $request)
+    {
+        // Validate input
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'password'    => 'required|confirmed|min:6', // password_confirmation field required
+            'role'        => 'required|in:cashier,manager,admin',
+            'location_id' => 'required|exists:locations,id',
+        ]);
+
+        // Create user
+        $user = User::create([
+            'name'        => $data['name'],
+            'email'       => $data['email'],
+            'password'    => Hash::make($data['password']),
+            'role'        => $data['role'],
+            'location_id' => $data['location_id'],
+            'is_admin'    => $data['role'] === 'admin' ? 1 : 0, // legacy flag
+        ]);
+
+        return redirect()->route('users.index')
+                         ->with('success', 'User created successfully!');
+    }
+
+    /**
+     * Show the form for editing the specified user
+     */
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        $locations = Location::all();
+        return view('users.edit', compact('user', 'locations'));
+    }
+
+    /**
+     * Update the specified user
      */
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$user->id,
+        // Validate input
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email,'.$user->id,
+            'password'    => 'nullable|confirmed|min:6',
+            'role'        => 'required|in:cashier,manager,admin',
             'location_id' => 'required|exists:locations,id',
-            'is_admin' => 'required|integer|in:0,1',
-            
         ]);
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-             'location_id' => $request->location_id,
-            'is_admin' => $request->is_admin,
-            
-        ]);
+        // Update user fields
+        $user->name        = $data['name'];
+        $user->email       = $data['email'];
+        $user->role        = $data['role'];
+        $user->location_id = $data['location_id'];
+        $user->is_admin    = $data['role'] === 'admin' ? 1 : 0;
 
         // Update password if provided
-        if ($request->password) {
-            $user->password = $request->password; // password mutator hashes it
-            $user->save();
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
         }
 
-        return redirect()->route('users.index')->with('success', 'User updated successfully!');
-    }
-    public function store(Request $request)
-    {
+        $user->save();
 
-      // dd($request);
-
-    // 1️⃣ Validate the incoming request
-    $data = $request->validate([
-        'name'     => 'required|string|max:255',
-        'email'    => 'required|email|unique:users,email',
-        'password' => 'required|confirmed|min:6', // expects password_confirmation field
-        'location_id' => 'required|exists:locations,id',
-     //   'is_admin' => 'required|boolean',
-    ]);
-
-    // 2️⃣ Create the user
-    $user = User::create([
-        'name'     => $data['name'],
-        'email'    => $data['email'],
-        'password' => Hash::make($data['password']),
-        'is_admin' => $request->has('is_admin') ? 1 : 0,
-        'location_id' => $request->location_id,
-    ]);
-
-    // dd($user);
-
-//    $user->locations()->sync($data['location_id']);  many to many
-
-    // 3️⃣ Redirect back with success message
-    return redirect()->route('users.index')
-                     ->with('success', 'User created successfully!');
+        return redirect()->route('users.index')
+                         ->with('success', 'User updated successfully!');
     }
 
- 
+    /**
+     * Remove the specified user from storage
+     */
     public function destroy($id)
     {
         $user = User::findOrFail($id);
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully!');
+        return redirect()->route('users.index')
+                         ->with('success', 'User deleted successfully!');
     }
-
 }

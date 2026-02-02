@@ -11,9 +11,19 @@
 
                 <div class="card-header d-flex justify-content-between align-items-center"> 
                     <h4>Products</h4>
-                    <a href="#" class="btn btn-sm btn-dark" data-toggle="modal" data-target="#addproduct">
-                        <i class="fa fa-plus"></i> Add New Product
-                    </a>
+                    <div>
+                        @if(auth()->user()->isAdmin())
+                            <a href="#" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addbrand">
+                                <i class="fa fa-plus"></i> Add Brand
+                            </a>
+                            <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#addcategory">
+                                <i class="fa fa-plus"></i> Add Category
+                            </a>
+                        @endif
+                        <a href="#" class="btn btn-sm btn-dark" data-toggle="modal" data-target="#addproduct">
+                            <i class="fa fa-plus"></i> Add Product
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">
@@ -243,6 +253,58 @@
   </div>
 </div>
 
+{{-- Add Brand Modal --}}
+@if(auth()->user()->isAdmin())
+<div class="modal right fade" id="addbrand" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add Brand</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+          <form action="{{ route('brands.store') }}" method="POST">
+              @csrf
+              <div class="form-group">
+                  <label>Brand Name</label>
+                  <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="modal-footer">
+                  <button class="btn btn-primary btn-block">Save Brand</button>
+              </div>
+          </form>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
+
+{{-- Add Category Modal --}}
+@if(auth()->user()->isAdmin())
+<div class="modal right fade" id="addcategory" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add Category</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+          <form action="{{ route('categories.store') }}" method="POST">
+              @csrf
+              <div class="form-group">
+                  <label>Category Name</label>
+                  <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="modal-footer">
+                  <button class="btn btn-primary btn-block">Save Category</button>
+              </div>
+          </form>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
+
 <style>
 .modal.right .modal-dialog{
     top: 0;
@@ -253,4 +315,5 @@
     transform: translate3d(25%,0,0);
 }
 </style>
+
 @endsection
