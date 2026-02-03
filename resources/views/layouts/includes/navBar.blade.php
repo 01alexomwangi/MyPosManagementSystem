@@ -1,89 +1,85 @@
- <!-- Navbar -->
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-            <div class="container">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm mb-4">
+    <div class="container-fluid">
 
-                <!-- Brand -->
-                <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.Little Pos', 'POS System') }}
-                </a>
+        <!-- Left: Brand -->
+        <a class="navbar-brand fw-bold me-auto" href="{{ url('/') }}">
+            Little POS
+        </a>
 
-                <!-- Toggler for mobile -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+        <!-- Toggler for mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-                <!-- Navbar links -->
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <!-- Navbar collapse -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
+            <!-- Center: POS buttons + Receipts dropdown -->
+            <div class="mx-auto d-flex flex-wrap justify-content-center mb-2">
 
-                    <!-- Left: POS Buttons -->
-                    <div class="navbar-nav me-auto">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#staticBackdrop" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                            <i class="fa fa-list"></i>
+                <!-- Receipts Dropdown -->
+                <div class="dropdown me-2 mb-2">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="receiptsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-receipt"></i> Receipts
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="receiptsDropdown">
+                        <li><a class="dropdown-item" href="{{ route('reports.receipts') }}">All Receipts</a></li>
+                        <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::today()->toDateString()]) }}">Today</a></li>
+                        <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfWeek()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfWeek()->toDateString()]) }}">This Week</a></li>
+                        <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfMonth()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfMonth()->toDateString()]) }}">This Month</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" onclick="window.print()"><i class="fa fa-print"></i> Print All</button></li>
+                        <li><a class="dropdown-item" href="{{ route('reports.receipts') }}?export=pdf"><i class="fa fa-file-pdf"></i> Export PDF</a></li>
+                    </ul>
+                </div>
 
-                        @auth
-                           @if(auth()->user()->isAdmin())
-                        </a>
-                        <a href="{{ route('users.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
+                <!-- Admin-only buttons -->
+                @auth
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('users.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
                             <i class="fa fa-user"></i> Users
                         </a>
-                          <a href="{{ route('reports.daily-sales') }}"
-                          class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                           <i class="fa fa-chart-line"></i> Reports
-                         </a>
-          
-
-                         <a href="{{ route('orders.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                            <i class="fa fa-laptop"></i> Cashier
+                        <a href="{{ route('reports.custom') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
+                            <i class="fa fa-chart-line"></i> Reports
                         </a>
-                        <a href="{{ route('products.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                            <i class="fa fa-box"></i> Products
-                        </a>
+                    @endif
 
-                         <a href="{{ route('sales.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                         <i class="fa fa-cash-register"></i> Sales
-                        </a>
-                        @else 
-
-                        <a href="{{ route('reports.daily-sales') }}"
-                         class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                         <i class="fa fa-chart-line"></i> My Sales
-                         </a>
-
-                        <a href="{{ route('orders.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                            <i class="fa fa-laptop"></i> Cashier
-                        </a>
-                        <a href="{{ route('products.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                            <i class="fa fa-box"></i> Products
-                        </a>
-
-                        <a href="{{ route('sales.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-1">
-                         <i class="fa fa-cash-register"></i> Sales
-                        </a>
-
-                         @endif
-                      @endauth  
-                    </div>
-
-                    <!-- Right: Auth -->
-                    <ul class="navbar-nav ms-auto">
-                        @auth
-                            <li class="nav-item me-2">
-                                <span class="nav-link">{{ auth()->user()->name }}</span>
-                            </li>
-                            <li class="nav-item">
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
-                                </form>
-                            </li>
-                        @endauth
-                        @guest
-                            <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Login</a></li>
-                            <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Register</a></li>
-                        @endguest
-                    </ul>
-
-                </div>
+                    <!-- Common POS buttons -->
+                    <a href="{{ route('orders.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
+                        <i class="fa fa-laptop"></i> Cashier
+                    </a>
+                    <a href="{{ route('products.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
+                        <i class="fa fa-box"></i> Products
+                    </a>
+                    <a href="{{ route('sales.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
+                        <i class="fa fa-cash-register"></i> Sales
+                    </a>
+                    <a href="{{ route('reports.custom') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
+                        <i class="fa fa-chart-line"></i> My Sales
+                    </a>
+                @endauth
             </div>
-        </nav>
+
+            <!-- Right: User info / auth -->
+            <ul class="navbar-nav ms-auto d-flex align-items-center">
+                @auth
+                    <li class="nav-item me-2">
+                        <span class="nav-link fw-bold">{{ auth()->user()->name }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                        </form>
+                    </li>
+                @endauth
+                @guest
+                    <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Login</a></li>
+                    <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Register</a></li>
+                @endguest
+            </ul>
+
+        </div>
+    </div>
+</nav>

@@ -27,12 +27,12 @@ class User extends Authenticatable
        PASSWORD HANDLING
     ====================================== */
 
-    // public function setPasswordAttribute($value)
-    // {
-    //     if ($value) {
-    //         $this->attributes['password'] = bcrypt($value);
-    //     }
-    // }
+    public function setPasswordAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['password'];   //= bcrypt($value);
+        }
+    }
 
     /* ======================================
        BACKWARD COMPATIBILITY

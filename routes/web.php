@@ -14,7 +14,20 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ReportController;
 
-Route::get('/', function () {
+
+Route::get('/', 'StoreController@index')->name('store.index');
+Route::get('/product/{id}', 'StoreController@show')->name('store.show');
+
+Route::get('/customer/register', 'CustomerAuthController@registerForm');
+Route::post('/customer/register', 'CustomerAuthController@register');
+
+Route::get('/customer/login', 'CustomerAuthController@loginForm');
+Route::post('/customer/login', 'CustomerAuthController@login');
+Route::post('/customer/logout', 'CustomerAuthController@logout');
+
+
+
+Route::get('/pos', function () {
     return view('welcome');
 });
 
@@ -36,9 +49,26 @@ Route::middleware('auth')->group(function () {
     // ----------------------------
     // REPORTS
     // ----------------------------
-    Route::get('/reports/daily-sales', 'ReportController@dailySales')->name('reports.daily-sales');
-    Route::get('/reports/weekly-sales', 'ReportController@weeklySales')->name('reports.weekly-sales');
-    Route::get('/reports/monthly-sales', 'ReportController@monthlySales')->name('reports.monthly-sales');
+    // Daily sales report
+Route::get('/reports/daily', 'ReportController@dailySales')
+    ->name('reports.daily');
+
+// Weekly sales report
+Route::get('/reports/weekly', 'ReportController@weeklySales')
+    ->name('reports.weekly');
+
+// Monthly sales report
+Route::get('/reports/monthly', 'ReportController@monthlySales')
+    ->name('reports.monthly');
+
+// Custom date range report (from/to form)
+Route::get('/reports/custom', 'ReportController@customReport')
+    ->name('reports.custom');
+
+     Route::get('/reports/receipts', 'ReportController@allReceipts')
+     ->name('reports.receipts');
+
+
 
     // ----------------------------
     // POS Resources

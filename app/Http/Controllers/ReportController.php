@@ -11,10 +11,13 @@ use Carbon\Carbon;
 
 class ReportController extends Controller
 {
+       /**
+     * Daily Sales Report
+     */
     public function dailySales()
     {
         $user = Auth::user();
-        $today = date('Y-m-d');
+        $today = Carbon::today()->toDateString();
 
         $query = Sale::with(['items.product', 'user', 'location'])
                      ->whereDate('created_at', $today)
@@ -23,26 +26,40 @@ class ReportController extends Controller
 
         $sales = $this->applyRoleFilter($query, $user)->get();
 
-        return view('reports.daily-sales', compact('sales', 'today'));
+        return view('reports.custom', [
+    'sales' => $sales,
+    'from'  => $today,
+    'to'    => null,
+      ]);
     }
 
+    /**
+     * Weekly Sales Report
+     */
     public function weeklySales()
     {
         $user = Auth::user();
 
-        $startOfWeek = Carbon::now()->startOfWeek();
-        $endOfWeek = Carbon::now()->endOfWeek();
+        $startOfWeek = Carbon::now()->startOfWeek()->toDateString();
+        $endOfWeek = Carbon::now()->endOfWeek()->toDateString();
 
-        $query = Sale::with(['items.product','user','location'])
+        $query = Sale::with(['items.product', 'user', 'location'])
                      ->whereBetween('created_at', [$startOfWeek, $endOfWeek])
                      ->orderBy('location_id')
                      ->orderBy('id');
 
         $sales = $this->applyRoleFilter($query, $user)->get();
 
-        return view('reports.weekly-sales', compact('sales', 'startOfWeek', 'endOfWeek'));
+        return view('reports.custom', [
+    'sales' => $sales,
+    'from'  => $startOfWeek,
+    'to'    => $endOfWeek,
+    ]);
     }
 
+    /**
+     * Monthly Sales Report
+     */
     public function monthlySales($year = null, $month = null)
     {
         $user = Auth::user();
@@ -53,27 +70,87 @@ class ReportController extends Controller
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
         $endOfMonth = Carbon::create($year, $month, 1)->endOfMonth();
 
-        $query = Sale::with(['items.product','user','location'])
+        $query = Sale::with(['items.product', 'user', 'location'])
                      ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                      ->orderBy('location_id')
                      ->orderBy('id');
 
         $sales = $this->applyRoleFilter($query, $user)->get();
 
-        return view('reports.monthly-sales', compact('sales', 'year', 'month'));
+        return view('reports.custom', [
+    'sales' => $sales,
+    'from'  => $startOfMonth->toDateString(),
+    'to'    => $endOfMonth->toDateString(),
+    ]);
     }
 
-    // Helper to filter based on user role
+    /**
+     * Custom Date Range Sales Report
+     */
+    public function customReport(Request $request)
+    {
+        $user = Auth::user();
+
+        $from = $request->from;
+        $to   = $request->to;
+
+        $query = Sale::with(['items.product', 'user', 'location']);
+
+        if ($from && !$to) {
+            $query->whereDate('created_at', $from);
+        }
+
+        if ($from && $to) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($from)->startOfDay(),
+                Carbon::parse($to)->endOfDay()
+            ]);
+        }
+
+        $sales = $this->applyRoleFilter($query, $user)
+                      ->orderBy('created_at', 'desc')
+                      ->get();
+
+        return view('reports.custom', compact('sales', 'from', 'to'));
+    }
+
+    /**
+     * Apply role-based filter for security
+     */
     private function applyRoleFilter($query, $user)
     {
         if ($user->isAdmin()) {
-            return $query; // Admin sees all
+            return $query; // Admin sees everything
         } elseif ($user->isManager()) {
             return $query->where('location_id', $user->location_id); // Manager sees only branch
         } else {
             return $query->where('user_id', $user->id); // Cashier sees own
         }
     }
+     
+
+    public function allReceipts(Request $request)
+{
+    $user = Auth::user();
+
+    $from = $request->from ?? null;
+    $to   = $request->to ?? null;
+
+    $query = Sale::with(['items.product', 'user', 'location']);
+
+    if ($from && $to) {
+        $query->whereBetween('created_at', [
+            Carbon::parse($from)->startOfDay(),
+            Carbon::parse($to)->endOfDay(),
+        ]);
+    }
+
+    $sales = $this->applyRoleFilter($query, $user)
+                  ->orderBy('created_at', 'desc')
+                  ->get();
+
+    return view('reports.receipts', compact('sales', 'from', 'to'));
+}
 
 
     /**
