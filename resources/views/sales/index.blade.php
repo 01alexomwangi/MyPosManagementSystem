@@ -12,20 +12,47 @@
             <div class="row mb-4">
                 @foreach($products as $product)
                 <div class="col-md-3 mb-3">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <h5>{{ $product->product_name }}</h5>
-                            <p>Price: {{ number_format($product->price, 2) }}</p>
-                            <p>Stock: {{ $product->quantity }}</p>
-                            <button type="button" 
-                                    class="btn btn-success btn-sm add-to-cart"
-                                    data-id="{{ $product->id }}"
-                                    data-name="{{ $product->product_name }}"
-                                    data-price="{{ $product->price }}">
-                                Add to Cart
-                            </button>
+                  <div class="card h-100 product-card">
+                    <div class="card-body text-center p-2">
+
+                        {{-- PRODUCT IMAGE --}}
+                        <div class="product-image mb-2">
+                            @if($product->image)
+                                <img src="{{ asset('images/products/'.$product->image) }}"
+                                     alt="{{ $product->product_name }}">
+                            @else
+                                <img src="{{ asset('images/products/default.png') }}"
+                                     alt="No image">
+                            @endif
                         </div>
+
+                        {{-- PRODUCT NAME --}}
+                        <h6 class="mb-1 font-weight-bold">
+                            {{ $product->product_name }}
+                        </h6>
+
+                        {{-- PRICE --}}
+                        <span class="badge badge-primary mb-1">
+                            KES {{ number_format($product->price, 2) }}
+                        </span>
+
+                        {{-- STOCK --}}
+                        <div class="small text-muted mb-2">
+                            Stock: {{ $product->quantity }}
+                        </div>
+
+                        {{-- ADD TO CART --}}
+                        <button type="button"
+                                class="btn btn-success btn-sm btn-block add-to-cart"
+                                data-id="{{ $product->id }}"
+                                data-name="{{ $product->product_name }}"
+                                data-price="{{ $product->price }}"
+                                {{ $product->quantity <= 0 ? 'disabled' : '' }}>
+                            <i class="fa fa-cart-plus"></i> Add
+                        </button>
+
                     </div>
+                  </div>
                 </div>
                 @endforeach
             </div>
@@ -110,7 +137,6 @@
     </div>
 
 </div>
-
 @endsection
 
 @section('script')
@@ -190,4 +216,28 @@ $(document).ready(function(){
 
 });
 </script>
+
+<style>
+.product-image {
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-image img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.product-card {
+    transition: transform 0.15s ease-in-out;
+}
+
+.product-card:hover {
+    transform: scale(1.03);
+}
+</style>
+
 @endsection

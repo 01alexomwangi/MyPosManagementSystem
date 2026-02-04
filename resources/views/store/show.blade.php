@@ -8,9 +8,10 @@
 
         <!-- PRODUCT IMAGE -->
         <div class="col-md-5 mb-4">
-            <div class="bg-secondary text-white text-center py-5 rounded shadow-sm">
-                <h5>Product Image</h5>
-            </div>
+            <img src="{{ asset('images/products/'.$product->image) }}"
+              class="img-fluid rounded shadow-sm"
+                alt="{{ $product->name }}">
+
         </div>
 
         <!-- PRODUCT DETAILS -->

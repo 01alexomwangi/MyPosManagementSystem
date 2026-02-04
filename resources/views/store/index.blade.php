@@ -20,16 +20,20 @@
                 <div class="card h-100 shadow-sm border-0">
 
                     <!-- IMAGE PLACEHOLDER -->
-                    <div class="bg-secondary text-white text-center py-5">
-                        <small>Product Image</small>
-                    </div>
+                   <img src="{{ asset('images/products/'.$product->image) }}"
+                   class="card-img-top"
+                   style="height:180px; object-fit:cover;"
+                    alt="{{ $product->name }}">
+
 
                     <div class="card-body text-center">
                         <h6 class="fw-bold mb-2">{{ $product->name }}</h6>
                         <p class="text-primary fw-bold mb-3">Ksh {{ number_format($product->price, 2) }}</p>
-                        <a href="{{ url('/product/'.$product->id) }}" class="btn btn-outline-primary btn-sm w-100">
-                            View Product
-                        </a>
+                        <a href="{{ route('store.show', $product->id) }}"
+                         class="btn btn-outline-primary btn-sm w-100">
+                      View Product
+                      </a>
+
                     </div>
                 </div>
             </div>
@@ -44,4 +48,7 @@
     </div>
 
 </div>
+
+
+
 @endsection

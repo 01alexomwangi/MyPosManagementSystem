@@ -12,6 +12,9 @@ class StoreController extends Controller
     {
         $products = Product::where('status', 1)->paginate(12);
         return view('store.index', compact('products'));
+
+
+        
     }
 
     public function show($id)
@@ -19,4 +22,6 @@ class StoreController extends Controller
         $product = Product::findOrFail($id);
         return view('store.show', compact('product'));
     }
+
+
 }
