@@ -20,23 +20,11 @@
             <input type="date" name="to" value="{{ $to ?? '' }}" class="form-control">
         </div>
 
-        <div class="col-md-4 d-flex align-items-end">
-            <button class="btn btn-primary w-100">
-                <i class="fa fa-sInvalidArgumentException
-View [reports.sales] not found.
-http://127.0.0.1:8000/reports/daily
-Hide solutions
-reports.sales was not found.
-Are you sure the view exists and is a .blade.php file?
-
-Stack trace
-Request
-App
-User
-Context
-earch"></i> Generate Report
-            </button>
-        </div>
+ <div class="col-md-4 d-flex align-items-end">
+    <button class="btn btn-primary w-100">
+        <i class="fa fa-search"></i> Generate Report
+    </button>
+</div>
 
     </form>
 
@@ -106,4 +94,4 @@ earch"></i> Generate Report
 
 </div>
 @endsection
->
+

@@ -6,13 +6,14 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CustomerCartController;
 
 
 Route::get('/', 'StoreController@index')->name('store.index');
@@ -24,6 +25,20 @@ Route::post('/customer/register', 'CustomerAuthController@register');
 Route::get('/customer/login', 'CustomerAuthController@loginForm');
 Route::post('/customer/login', 'CustomerAuthController@login');
 Route::post('/customer/logout', 'CustomerAuthController@logout');
+
+// Add product to cart
+Route::post('/cart/add/{product}', 'CustomerCartController@addToCart')->name('cart.add');
+
+
+// Customer Cart page
+Route::get('/cart', 'CustomerCartController@cart')->name('cart.index');
+
+// Checkout
+Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
+
+Route::get('/cashier/pending', 'CashierController@pendingSales')->name('cashier.pending');
+Route::post('/cashier/complete/{id}', 'CashierController@completeSale')->name('cashier.complete');
+
 
 
 
@@ -73,7 +88,7 @@ Route::get('/reports/custom', 'ReportController@customReport')
     // ----------------------------
     // POS Resources
     // ----------------------------
-    Route::resource('/orders', 'OrderController');
+  
     Route::resource('/products', 'ProductController');
     Route::resource('/locations', 'LocationController');
     Route::resource('/sales', 'SaleController');
@@ -97,10 +112,7 @@ Route::get('/reports/custom', 'ReportController@customReport')
 // Admin Routes
 // ----------------------------
 Route::middleware(['auth','admin'])->group(function () {
-    Route::resource('/suppliers','SupplierController');
     Route::resource('/users','UserController');
-    Route::resource('/companies','CompanyController');
-    Route::resource('/transactions','TransactionController');
     Route::resource('/brands', 'BrandController');
     Route::resource('/categories', 'CategoryController');
 });

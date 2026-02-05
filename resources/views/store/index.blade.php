@@ -23,15 +23,15 @@
                    <img src="{{ asset('images/products/'.$product->image) }}"
                    class="card-img-top"
                    style="height:180px; object-fit:cover;"
-                    alt="{{ $product->name }}">
+                    alt="{{ $product->product_name }}">
 
 
                     <div class="card-body text-center">
-                        <h6 class="fw-bold mb-2">{{ $product->name }}</h6>
+                        <h6 class="fw-bold mb-2">{{ $product->product_name }}</h6>
                         <p class="text-primary fw-bold mb-3">Ksh {{ number_format($product->price, 2) }}</p>
                         <a href="{{ route('store.show', $product->id) }}"
                          class="btn btn-outline-primary btn-sm w-100">
-                      View Product
+                         View Product
                       </a>
 
                     </div>
