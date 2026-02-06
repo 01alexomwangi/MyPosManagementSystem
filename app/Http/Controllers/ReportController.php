@@ -6,6 +6,10 @@ namespace App\Http\Controllers;
 use App\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use PDF;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SalesReportExport;
+
 
 use Carbon\Carbon;
 
@@ -151,6 +155,26 @@ class ReportController extends Controller
 
     return view('reports.receipts', compact('sales', 'from', 'to'));
 }
+
+
+     public function exportPdf(Request $request)
+    {
+        $from = $request->from;
+        $to = $request->to;
+
+        $sales = Sale::with('user', 'location')
+            ->when($from, fn($q) => $q->whereDate('created_at', '>=', $from))
+            ->when($to, fn($q) => $q->whereDate('created_at', '<=', $to))
+            ->get();
+
+        $pdf = PDF::loadView('reports.pdf', compact('sales', 'from', 'to'));
+        return $pdf->download('sales-report.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        return Excel::download(new SalesReportExport($request->from, $request->to), 'sales-report.xlsx');
+    }
 
 
     /**

@@ -23,16 +23,16 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /* ======================================
+    /* ======================================   //mutator
        PASSWORD HANDLING
     ====================================== */
-
-    public function setPasswordAttribute($value)
-    {
-        if ($value) {
-            $this->attributes['password'];   //= bcrypt($value);
-        }
-    }
+ 
+    // public function setPasswordAttribute($value)
+    // {
+    //     if ($value) {
+    //         $this->attributes['password'];   //= bcrypt($value);
+    //     }
+    // }
 
     /* ======================================
        BACKWARD COMPATIBILITY

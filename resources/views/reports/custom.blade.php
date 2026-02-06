@@ -3,13 +3,36 @@
 @section('content')
 <div class="container">
 
-    <h4 class="mb-4">Sales Reports</h4>
+    {{-- =======================
+        PAGE HEADER + EXPORT DROPDOWN
+    ======================== --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Sales Reports</h4>
+
+        <!-- Export Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                <li>
+                    <a class="dropdown-item" href="{{ route('reports.export.pdf', ['from' => $from ?? '', 'to' => $to ?? '']) }}">
+                        📄 Export PDF
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ route('reports.export.excel', ['from' => $from ?? '', 'to' => $to ?? '']) }}">
+                        📊 Export Excel
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
     {{-- =======================
         DATE FILTER FORM
     ======================== --}}
     <form method="GET" action="{{ route('reports.custom') }}" class="row g-3 mb-4">
-
         <div class="col-md-4">
             <label class="form-label">From</label>
             <input type="date" name="from" value="{{ $from ?? '' }}" class="form-control">
@@ -20,12 +43,11 @@
             <input type="date" name="to" value="{{ $to ?? '' }}" class="form-control">
         </div>
 
- <div class="col-md-4 d-flex align-items-end">
-    <button class="btn btn-primary w-100">
-        <i class="fa fa-search"></i> Generate Report
-    </button>
-</div>
-
+        <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary w-100">
+                <i class="fa fa-search"></i> Generate Report
+            </button>
+        </div>
     </form>
 
     {{-- =======================
@@ -78,7 +100,7 @@
                 </tbody>
             </table>
 
-            {{-- TOTAL --}}
+            {{-- GRAND TOTAL --}}
             <div class="text-end fw-bold mt-3">
                 Grand Total:
                 {{ number_format($sales->sum('total'), 2) }}
@@ -94,4 +116,3 @@
 
 </div>
 @endsection
-

@@ -30,7 +30,7 @@
                         <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfMonth()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfMonth()->toDateString()]) }}">This Month</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><button class="dropdown-item" onclick="window.print()"><i class="fa fa-print"></i> Print All</button></li>
-                        <li><a class="dropdown-item" href="{{ route('reports.receipts') }}?export=pdf"><i class="fa fa-file-pdf"></i> Export PDF</a></li>
+    
                     </ul>
                 </div>
 

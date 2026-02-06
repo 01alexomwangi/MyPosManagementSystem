@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Our Products')
+@section('title', 'Little Store')
 
 @section('content')
 <div class="container py-5">

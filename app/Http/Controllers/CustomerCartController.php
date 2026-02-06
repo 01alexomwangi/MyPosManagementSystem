@@ -34,13 +34,15 @@ class CustomerCartController extends Controller
         $total += $item['total_amount'];
     }
 
-    // 4️⃣ Create pending sale (cashier will see this)
-    $pendingSale = PendingSale::create([
-        'customer_id' => $customerId,
-        'location_id' => $request->location_id ?? 1, // fallback
-        'total'       => $total,
-        'status'      => 'pending',
-    ]);
+   $firstProductId = $cart[array_key_first($cart)]['product_id'];
+   $product = Product::find($firstProductId);
+
+$pendingSale = PendingSale::create([
+    'customer_id' => $customerId,
+    'location_id' => $product->location_id, // <- ensures correct branch
+    'total'       => $total,
+    'status'      => 'pending',             // <- must be pending
+]);
 
     // 5️⃣ Save each item
     foreach ($cart as $item) {
@@ -66,9 +68,9 @@ class CustomerCartController extends Controller
 public function addToCart(Request $request, $productId)
 {
     // Check if customer is logged in
-    if (!Session::has('customer_id')) {
-        return redirect('/customer/login')->with('error', 'Please login first.');
-    }
+    // if (!Session::has('customer_id')) {
+    //     return redirect('/customer/login')->with('error', 'Please login first.');
+    // }
 
     $cart = Session::get('cart', []); // get current cart or empty
 
@@ -104,5 +106,16 @@ public function cart()
     return view('store.cart', compact('cart'));
 }
 
+public function clearCart()
+{
+    // Remove cart from session
+    Session::forget('cart');
+
+    return redirect()->back()
+        ->with('success', 'Cart cleared successfully.');
+}
+
+
 
 }
+

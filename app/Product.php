@@ -42,5 +42,11 @@ class Product extends Model
           }
 
            //$product->saleItems  // all SaleItem rows that reference this product
+           
+          // 🔗 One product can appear in many pending sale items
+           public function pendingSaleItems()
+          {
+            return $this->hasMany(PendingSaleItem::class, 'product_id');
+           }
 
 }

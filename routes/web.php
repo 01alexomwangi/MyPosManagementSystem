@@ -28,6 +28,8 @@ Route::post('/customer/logout', 'CustomerAuthController@logout');
 
 // Add product to cart
 Route::post('/cart/add/{product}', 'CustomerCartController@addToCart')->name('cart.add');
+Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
+
 
 
 // Customer Cart page
@@ -82,6 +84,10 @@ Route::get('/reports/custom', 'ReportController@customReport')
 
      Route::get('/reports/receipts', 'ReportController@allReceipts')
      ->name('reports.receipts');
+
+     // Export
+Route::get('/reports/export/pdf', 'ReportController@exportPdf')->name('reports.export.pdf');
+Route::get('/reports/export/excel', 'ReportController@exportExcel')->name('reports.export.excel');
 
 
 

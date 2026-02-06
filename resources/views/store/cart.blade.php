@@ -1,4 +1,4 @@
-@extends('layouts.store')
+{{-- @extends('layouts.store')
 
 @section('title', 'Your Cart')
 
@@ -53,4 +53,4 @@
     @endif
 
 </div>
-@endsection
+@endsection --}}
