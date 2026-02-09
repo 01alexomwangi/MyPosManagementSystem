@@ -1,59 +1,93 @@
 @extends('layouts.store')
 
-@section('title', $product->name)
+@section('title', $product->product_name)
 
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
 
-        <!-- PRODUCT IMAGE -->
+        <!-- IMAGE -->
         <div class="col-md-5 mb-4">
             <img src="{{ asset('images/products/'.$product->image) }}"
-              class="img-fluid rounded shadow-sm"
-                alt="{{ $product->product_name }}">
+                 class="img-fluid rounded shadow-sm">
         </div>
 
-        <!-- PRODUCT DETAILS -->
+        <!-- DETAILS -->
         <div class="col-md-5">
-            <div class="card border-0 shadow-sm">
+            <div class="card shadow-sm border-0">
                 <div class="card-body">
-                    <h3 class="fw-bold mb-3">{{ $product->product_name }}</h3>
-                    <h4 class="text-primary fw-bold mb-3">Ksh {{ number_format($product->price, 2) }}</h4>
-                    <p class="text-muted mb-4">{{ $product->description }}</p>
 
-                    <form method="POST" action="{{ url('/cart/add/'.$product->id) }}">
-                        @csrf
+                    <h3 class="fw-bold">{{ $product->product_name }}</h3>
 
-                        <div class="input-group mb-3" style="max-width: 200px;">
-                            <button type="button" class="btn btn-outline-secondary" id="decrease">-</button>
-                            <input type="number" name="quantity" value="1" min="1" class="form-control text-center" id="quantityInput">
-                            <button type="button" class="btn btn-outline-secondary" id="increase">+</button>
-                        </div>
+                    <h4 class="text-primary fw-bold">
+                        Ksh <span id="productTotal">{{ number_format($product->price, 2) }}</span>
+                    </h4>
 
-                        <button type="submit" class="btn btn-success btn-lg w-100">Add to Cart</button>
-                    </form>
+                    <p class="text-muted">{{ $product->description }}</p>
 
-                    <a href="{{ url('/') }}" class="btn btn-link mt-3 w-100">← Back to shop</a>
+                   <form method="POST" action="{{ url('/cart/add/'.$product->id) }}" id="addToCartForm">
+    @csrf
+
+    <input type="hidden" id="unitPrice" value="{{ $product->price }}">
+    <input type="hidden" name="quantity" id="quantityInput" value="0">
+
+    <!-- ADD TO CART BUTTON -->
+    <button type="submit"
+        class="btn btn-success btn-lg w-100 d-flex justify-content-between align-items-center px-3">
+
+        <span class="btn btn-light btn-sm" id="minusBtn">−</span>
+
+        <span class="fw-bold text-white">
+            <span id="qtyDisplay">1</span> × Add to Cart
+        </span>
+
+        <span class="btn btn-light btn-sm" id="plusBtn">+</span>
+
+    </button>
+</form>
+
+
+                    <a href="{{ url('/') }}" class="btn btn-link w-100 mt-3">← Back</a>
+
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
 <script>
-    const decreaseBtn = document.getElementById('decrease');
-    const increaseBtn = document.getElementById('increase');
-    const quantityInput = document.getElementById('quantityInput');
+let quantity = 0;
 
-    decreaseBtn.addEventListener('click', () => {
-        let current = parseInt(quantityInput.value);
-        if(current > 1) quantityInput.value = current - 1;
-    });
+const unitPrice   = parseFloat(document.getElementById('unitPrice').value);
+const qtyDisplay  = document.getElementById('qtyDisplay');
+const qtyInput    = document.getElementById('quantityInput');
+const productTotal = document.getElementById('productTotal');
 
-    increaseBtn.addEventListener('click', () => {
-        let current = parseInt(quantityInput.value);
-        quantityInput.value = current + 1;
-    });
+function money(v){
+    return v.toLocaleString(undefined,{minimumFractionDigits:2});
+}
+
+function refresh(){
+    qtyDisplay.innerText = quantity;
+    qtyInput.value = quantity;
+    productTotal.innerText = money(quantity * unitPrice);
+}
+
+document.getElementById('plusBtn').onclick = (e) => {
+    e.preventDefault();
+    quantity++;
+    refresh();
+};
+
+document.getElementById('minusBtn').onclick = (e) => {
+    e.preventDefault();
+    if(quantity > 1){
+        quantity--;
+        refresh();
+    }
+};
+
+refresh();
 </script>
+
 @endsection

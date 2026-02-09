@@ -20,7 +20,7 @@ Route::get('/', 'StoreController@index')->name('store.index');
 Route::get('/product/{id}', 'StoreController@show')->name('store.show');
 
 Route::get('/customer/register', 'CustomerAuthController@registerForm');
-Route::post('/customer/register', 'CustomerAuthController@register');
+Route::post('/customer/register', 'CustomerAuthController@register')->name('customer.register');
 
 Route::get('/customer/login', 'CustomerAuthController@loginForm');
 Route::post('/customer/login', 'CustomerAuthController@login');
@@ -33,7 +33,10 @@ Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear
 
 
 // Customer Cart page
-Route::get('/cart', 'CustomerCartController@cart')->name('cart.index');
+Route::get('/cart', 'CustomerCartController@cart')->name('customer.cart');
+
+
+
 
 // Checkout
 Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');

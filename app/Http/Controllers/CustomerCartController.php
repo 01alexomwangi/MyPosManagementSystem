@@ -67,40 +67,41 @@ $pendingSale = PendingSale::create([
     // CustomerCartController
 public function addToCart(Request $request, $productId)
 {
-    // Check if customer is logged in
-    // if (!Session::has('customer_id')) {
-    //     return redirect('/customer/login')->with('error', 'Please login first.');
-    // }
+    $cart = Session::get('cart', []);
 
-    $cart = Session::get('cart', []); // get current cart or empty
+    $product = Product::findOrFail($productId);
+    $quantity = (int) $request->quantity;
 
-    $product = Product::findOrFail($productId); // make sure App\Product is imported
-
-    if(isset($cart[$productId])) {
-        $cart[$productId]['quantity'] += 1;
-        $cart[$productId]['total_amount'] = $cart[$productId]['quantity'] * $product->price;
+    if (isset($cart[$productId])) {
+        // ✅ If product already exists, ADD quantity
+        $cart[$productId]['quantity'] += $quantity;
     } else {
+        // ✅ First time adding product
         $cart[$productId] = [
             'product_id' => $product->id,
-            'name' => $product->product_name,
-            'price' => $product->price,
-            'quantity' => 1,
-            'total_amount' => $product->price,
+            'name'       => $product->product_name,
+            'price'      => $product->price,
+            'quantity'   => $quantity,
         ];
     }
 
-    Session::put('cart', $cart); // save back to session
+    // ✅ Always recalculate total correctly
+    $cart[$productId]['total_amount'] =
+        $cart[$productId]['price'] * $cart[$productId]['quantity'];
+
+    Session::put('cart', $cart);
 
     return redirect()->back()->with('success', 'Added to cart!');
 }
 
 
 
+
 public function cart()
 {
-    if (!Session::has('customer_id')) {
-        return redirect('/customer/login')->with('error', 'Please login first.');
-    }
+    // if (!Session::has('customer_id')) {
+    //     return redirect('/customer/login')->with('error', 'Please login first.');
+    // }
 
     $cart = Session::get('cart', []);
     return view('store.cart', compact('cart'));

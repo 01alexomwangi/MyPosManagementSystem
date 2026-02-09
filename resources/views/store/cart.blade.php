@@ -1,56 +1,119 @@
-{{-- @extends('layouts.store')
+@extends('layouts.store')
 
 @section('title', 'Your Cart')
 
 @section('content')
-<div class="container py-5">
+<div class="container py-4">
+    <h3>Your Cart</h3>
 
-    <h2 class="mb-4">Your Shopping Cart</h2>
-
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    @php
+        $cart = session()->get('cart', []);
+        $cartTotal = array_sum(array_column($cart, 'total_amount'));
+        $cartQty = array_sum(array_column($cart, 'quantity'));
+    @endphp
 
     @if(count($cart) > 0)
-    <form method="POST" action="{{ route('customer.cart.checkout') }}">
-        @csrf
-        <input type="hidden" name="location_id" value="1"> <!-- adjust if needed -->
-
         <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>Product</th>
-                    <th>Qty</th>
+                    <th style="width: 150px;">Quantity</th>
                     <th>Price</th>
                     <th>Total</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($cart as $item)
-                <tr>
+                @foreach($cart as $key => $item)
+                <tr data-key="{{ $key }}">
                     <td>{{ $item['name'] }}</td>
                     <td>
-                        <input type="number" name="items[{{ $loop->index }}][quantity]" value="{{ $item['quantity'] }}" class="form-control" min="1">
-                        <input type="hidden" name="items[{{ $loop->index }}][product_id]" value="{{ $item['product_id'] }}">
-                        <input type="hidden" name="items[{{ $loop->index }}][price]" value="{{ $item['price'] }}">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-outline-secondary minusBtn">−</button>
+                            <span class="fw-bold fs-6 qtyDisplay">{{ $item['quantity'] }}</span>
+                            <button type="button" class="btn btn-outline-secondary plusBtn">+</button>
+                        </div>
                     </td>
-                    <td>{{ number_format($item['price'], 2) }}</td>
-                    <td>
-                        <input type="hidden" name="items[{{ $loop->index }}][total_amount]" value="{{ $item['total_amount'] }}">
-                        {{ number_format($item['total_amount'], 2) }}
-                    </td>
+                    <td>Ksh <span class="price">{{ number_format($item['price'], 2) }}</span></td>
+                    <td>Ksh <span class="itemTotal">{{ number_format($item['total_amount'], 2) }}</span></td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
 
-        <h4>Total: Ksh {{ number_format(array_sum(array_column($cart, 'total_amount')),2) }}</h4>
+        <div class="d-flex justify-content-between align-items-center">
+            <strong>Total: Ksh <span id="cartTotalDisplay">{{ number_format($cartTotal, 2) }}</span></strong>
 
-        <button type="submit" class="btn btn-primary mt-3">Checkout</button>
-    </form>
+            <div class="d-flex gap-2">
+                <form action="{{ route('customer.cart.checkout') }}" method="POST">
+                    @csrf
+                    <button class="btn btn-primary">Proceed to Checkout</button>
+                </form>
+
+                <form action="{{ route('cart.clear') }}" method="POST">
+                    @csrf
+                    <button class="btn btn-danger">Clear Cart</button>
+                </form>
+            </div>
+        </div>
     @else
-        <p>Your cart is empty. <a href="{{ route('store.index') }}">Browse products</a></p>
+        <p>Your cart is empty. <a href="{{ url('/') }}">Go back to shop</a></p>
     @endif
-
 </div>
-@endsection --}}
+
+{{-- REAL-TIME QUANTITY & NAVBAR UPDATE --}}
+<script>
+    const cartRows = document.querySelectorAll('tr[data-key]');
+    const cartTotalEl = document.getElementById('cartTotalDisplay');
+    const cartCountEl = document.getElementById('cartCount');
+    const cartNavTotalEl = document.getElementById('cartTotal');
+
+    function formatMoney(value) {
+        return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    cartRows.forEach(row => {
+        const plusBtn = row.querySelector('.plusBtn');
+        const minusBtn = row.querySelector('.minusBtn');
+        const qtyDisplay = row.querySelector('.qtyDisplay');
+        const priceEl = row.querySelector('.price');
+        const itemTotalEl = row.querySelector('.itemTotal');
+
+        let quantity = parseInt(qtyDisplay.innerText);
+        const price = parseFloat(priceEl.innerText.replace(/,/g, ''));
+
+        function updateItemTotal() {
+            const total = quantity * price;
+            itemTotalEl.innerText = formatMoney(total);
+            updateCartTotal();
+        }
+
+        function updateCartTotal() {
+            let total = 0;
+            let totalQty = 0;
+            document.querySelectorAll('tr[data-key]').forEach(r => {
+                const q = parseInt(r.querySelector('.qtyDisplay').innerText);
+                const p = parseFloat(r.querySelector('.price').innerText.replace(/,/g,''));
+                total += q * p;
+                totalQty += q;
+            });
+            cartTotalEl.innerText = formatMoney(total);
+            if(cartCountEl) cartCountEl.innerText = totalQty;
+            if(cartNavTotalEl) cartNavTotalEl.innerText = formatMoney(total);
+        }
+
+        plusBtn.addEventListener('click', () => {
+            quantity++;
+            qtyDisplay.innerText = quantity;
+            updateItemTotal();
+        });
+
+        minusBtn.addEventListener('click', () => {
+            if(quantity > 1){
+                quantity--;
+                qtyDisplay.innerText = quantity;
+                updateItemTotal();
+            }
+        });
+    });
+</script>
+@endsection
