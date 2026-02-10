@@ -19,33 +19,39 @@
 
                     <h3 class="fw-bold">{{ $product->product_name }}</h3>
 
+                    <!-- STATIC Product Price -->
                     <h4 class="text-primary fw-bold">
                         Ksh <span id="productTotal">{{ number_format($product->price, 2) }}</span>
                     </h4>
 
                     <p class="text-muted">{{ $product->description }}</p>
 
-                   <form method="POST" action="{{ url('/cart/add/'.$product->id) }}" id="addToCartForm">
-    @csrf
+                    <form id="addToCartForm">
+                        @csrf
+                        <input type="hidden" id="unitPrice" value="{{ $product->price }}">
+                        <input type="hidden" name="quantity" id="quantityInput" value="1">
+                        <input type="hidden" id="productId" value="{{ $product->id }}">
 
-    <input type="hidden" id="unitPrice" value="{{ $product->price }}">
-    <input type="hidden" name="quantity" id="quantityInput" value="0">
+                        
+                       <!-- ADD TO CART BUTTON (initially visible) -->
+  <button type="button" class="btn btn-dark w-100" id="addToCartBtn">
+    Add to Cart
+  </button>
 
-    <!-- ADD TO CART BUTTON -->
-    <button type="submit"
-        class="btn btn-success btn-lg w-100 d-flex justify-content-between align-items-center px-3">
+  <!-- QUANTITY CONTROLS (hidden initially) -->
+  <div class="d-flex justify-content-center align-items-center mt-2 d-none"
+     id="qtyControls">
 
-        <span class="btn btn-light btn-sm" id="minusBtn">−</span>
+    <button type="button" class="btn btn-dark btn-sm" id="minusBtn">−</button>
 
-        <span class="fw-bold text-white">
-            <span id="qtyDisplay">1</span> × Add to Cart
-        </span>
+    <span class="fw-bold text-black px-3" id="qtyDisplay">1</span>
 
-        <span class="btn btn-light btn-sm" id="plusBtn">+</span>
+    <button type="button" class="btn btn-dark btn-sm" id="plusBtn">+</button>
+ </div>
 
-    </button>
-</form>
 
+
+                    </form>
 
                     <a href="{{ url('/') }}" class="btn btn-link w-100 mt-3">← Back</a>
 
@@ -56,38 +62,76 @@
 </div>
 
 <script>
-let quantity = 0;
 
-const unitPrice   = parseFloat(document.getElementById('unitPrice').value);
-const qtyDisplay  = document.getElementById('qtyDisplay');
-const qtyInput    = document.getElementById('quantityInput');
-const productTotal = document.getElementById('productTotal');
+let quantity = 1;
 
+// Elements
+const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+const qtyDisplay = document.getElementById('qtyDisplay');
+const qtyInput = document.getElementById('quantityInput');
+const productId = document.getElementById('productId').value;
+
+const addToCartBtn = document.getElementById('addToCartBtn');
+const qtyControls = document.getElementById('qtyControls');
+
+const plusBtn = document.getElementById('plusBtn');
+const minusBtn = document.getElementById('minusBtn');
+
+// Navbar
+const cartCountEl = document.getElementById('cartCount');
+const cartNavTotalEl = document.getElementById('cartTotal');
+
+// Money formatter
 function money(v){
     return v.toLocaleString(undefined,{minimumFractionDigits:2});
 }
 
+// Refresh UI
 function refresh(){
     qtyDisplay.innerText = quantity;
     qtyInput.value = quantity;
-    productTotal.innerText = money(quantity * unitPrice);
+
+    if(cartCountEl) cartCountEl.innerText = quantity;
+    if(cartNavTotalEl) cartNavTotalEl.innerText = money(quantity * unitPrice);
 }
 
-document.getElementById('plusBtn').onclick = (e) => {
-    e.preventDefault();
+// AJAX update
+function updateCartServer() {
+    fetch(`/cart/add/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ quantity })
+    });
+}
+
+// ADD TO CART (first click)
+addToCartBtn.addEventListener('click', function () {
+    quantity = 1;
+    updateCartServer();
+    refresh();
+
+    addToCartBtn.classList.add('d-none');   // hide button
+    qtyControls.classList.remove('d-none'); // show +/-
+});
+
+// PLUS
+plusBtn.addEventListener('click', function () {
     quantity++;
     refresh();
-};
+    updateCartServer();
+});
 
-document.getElementById('minusBtn').onclick = (e) => {
-    e.preventDefault();
-    if(quantity > 1){
+// MINUS
+minusBtn.addEventListener('click', function () {
+    if (quantity > 1) {
         quantity--;
         refresh();
+        updateCartServer();
     }
-};
-
-refresh();
+});
 </script>
 
 @endsection

@@ -96,6 +96,9 @@
                 total += q * p;
                 totalQty += q;
             });
+
+
+ 
             cartTotalEl.innerText = formatMoney(total);
             if(cartCountEl) cartCountEl.innerText = totalQty;
             if(cartNavTotalEl) cartNavTotalEl.innerText = formatMoney(total);

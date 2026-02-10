@@ -74,7 +74,7 @@ public function addToCart(Request $request, $productId)
 
     if (isset($cart[$productId])) {
         // ✅ If product already exists, ADD quantity
-        $cart[$productId]['quantity'] += $quantity;
+        $cart[$productId]['quantity'] = $quantity;
     } else {
         // ✅ First time adding product
         $cart[$productId] = [
@@ -115,6 +115,43 @@ public function clearCart()
     return redirect()->back()
         ->with('success', 'Cart cleared successfully.');
 }
+
+   public function add(Request $request, $id)
+{
+     $cart = Session::get('cart', []);
+
+    $quantity = $request->input('quantity', 1);
+    $cart = session()->get('cart', []);
+
+    $product = Product::find($id);
+    $cart[$id] = [
+        'product_id' => $product->id,
+        'id' => $product->id,
+        'name' => $product->product_name,
+        'price' => $product->price,
+        'quantity' => $quantity,
+        'total_amount' => $quantity * $product->price,
+    ];
+
+    session()->put('cart', $cart);
+
+    return response()->json(['status' => 'success']);
+}
+
+
+public function updateQuantity(Request $request, $productId)
+{
+    $cart = session()->get('cart', []);
+
+    if(isset($cart[$productId])) {
+        $cart[$productId]['quantity'] = $request->quantity;
+        $cart[$productId]['total_amount'] = $cart[$productId]['price'] * $request->quantity;
+        session()->put('cart', $cart);
+    }
+
+    return response()->json(['success' => true, 'cart' => $cart]);
+}
+
 
 
 

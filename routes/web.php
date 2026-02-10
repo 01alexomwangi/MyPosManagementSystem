@@ -29,17 +29,14 @@ Route::post('/customer/logout', 'CustomerAuthController@logout');
 // Add product to cart
 Route::post('/cart/add/{product}', 'CustomerCartController@addToCart')->name('cart.add');
 Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
-
-
-
 // Customer Cart page
 Route::get('/cart', 'CustomerCartController@cart')->name('customer.cart');
-
-
-
-
 // Checkout
 Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
+
+Route::post('/cart/update/{productId}', 'CustomerCartController@updateQuantity')->name('cart.update');
+
+
 
 Route::get('/cashier/pending', 'CashierController@pendingSales')->name('cashier.pending');
 Route::post('/cashier/complete/{id}', 'CashierController@completeSale')->name('cashier.complete');
