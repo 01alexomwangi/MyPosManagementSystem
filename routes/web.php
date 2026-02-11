@@ -26,15 +26,13 @@ Route::get('/customer/login', 'CustomerAuthController@loginForm');
 Route::post('/customer/login', 'CustomerAuthController@login');
 Route::post('/customer/logout', 'CustomerAuthController@logout');
 
-// Add product to cart
-Route::post('/cart/add/{product}', 'CustomerCartController@addToCart')->name('cart.add');
-Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
-// Customer Cart page
-Route::get('/cart', 'CustomerCartController@cart')->name('customer.cart');
-// Checkout
+Route::post('/cart/add/{id}', 'CustomerCartController@add')->name('cart.add');
+Route::post('/cart/update/{id}', 'CustomerCartController@updateQuantity')->name('cart.update');
 Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
+Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
+Route::get('/cart', 'CustomerCartController@cart')->name('cart.view');
+Route::post('/cart/remove/{id}', 'CustomerCartController@remove')->name('cart.remove');
 
-Route::post('/cart/update/{productId}', 'CustomerCartController@updateQuantity')->name('cart.update');
 
 
 

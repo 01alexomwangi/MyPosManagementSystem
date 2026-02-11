@@ -64,45 +64,8 @@ $pendingSale = PendingSale::create([
 }
 
 
-    // CustomerCartController
-public function addToCart(Request $request, $productId)
-{
-    $cart = Session::get('cart', []);
-
-    $product = Product::findOrFail($productId);
-    $quantity = (int) $request->quantity;
-
-    if (isset($cart[$productId])) {
-        // ✅ If product already exists, ADD quantity
-        $cart[$productId]['quantity'] = $quantity;
-    } else {
-        // ✅ First time adding product
-        $cart[$productId] = [
-            'product_id' => $product->id,
-            'name'       => $product->product_name,
-            'price'      => $product->price,
-            'quantity'   => $quantity,
-        ];
-    }
-
-    // ✅ Always recalculate total correctly
-    $cart[$productId]['total_amount'] =
-        $cart[$productId]['price'] * $cart[$productId]['quantity'];
-
-    Session::put('cart', $cart);
-
-    return redirect()->back()->with('success', 'Added to cart!');
-}
-
-
-
-
 public function cart()
 {
-    // if (!Session::has('customer_id')) {
-    //     return redirect('/customer/login')->with('error', 'Please login first.');
-    // }
-
     $cart = Session::get('cart', []);
     return view('store.cart', compact('cart'));
 }
@@ -116,27 +79,44 @@ public function clearCart()
         ->with('success', 'Cart cleared successfully.');
 }
 
-   public function add(Request $request, $id)
+ public function add(Request $request, $id)
 {
-     $cart = Session::get('cart', []);
-
-    $quantity = $request->input('quantity', 1);
     $cart = session()->get('cart', []);
 
-    $product = Product::find($id);
-    $cart[$id] = [
-        'product_id' => $product->id,
-        'id' => $product->id,
-        'name' => $product->product_name,
-        'price' => $product->price,
-        'quantity' => $quantity,
-        'total_amount' => $quantity * $product->price,
-    ];
+    $product = Product::findOrFail($id);
+    $quantity = (int) $request->quantity;
+
+    if(isset($cart[$id])) {
+        $cart[$id]['quantity'] = $quantity;
+    } else {
+        $cart[$id] = [
+            'product_id' => $product->id,
+            'name' => $product->product_name,
+            'price' => $product->price,
+            'quantity' => $quantity,
+        ];
+    }
+
+    $cart[$id]['total_amount'] =
+        $cart[$id]['price'] * $cart[$id]['quantity'];
 
     session()->put('cart', $cart);
 
-    return response()->json(['status' => 'success']);
+    $totalQty = 0;
+    $totalAmount = 0;
+
+    foreach($cart as $item){
+        $totalQty += $item['quantity'];
+        $totalAmount += $item['total_amount'];
+    }
+
+    return response()->json([
+        'success' => true,
+        'cartCount' => $totalQty,
+        'cartTotal' => $totalAmount
+    ]);
 }
+
 
 
 public function updateQuantity(Request $request, $productId)
@@ -144,14 +124,52 @@ public function updateQuantity(Request $request, $productId)
     $cart = session()->get('cart', []);
 
     if(isset($cart[$productId])) {
-        $cart[$productId]['quantity'] = $request->quantity;
-        $cart[$productId]['total_amount'] = $cart[$productId]['price'] * $request->quantity;
+        $cart[$productId]['quantity'] = (int)$request->quantity;
+        $cart[$productId]['total_amount'] =
+            $cart[$productId]['price'] * $request->quantity;
+
         session()->put('cart', $cart);
     }
 
-    return response()->json(['success' => true, 'cart' => $cart]);
+    $totalQty = 0;
+    $totalAmount = 0;
+
+    foreach($cart as $item){
+        $totalQty += $item['quantity'];
+        $totalAmount += $item['total_amount'];
+    }
+
+    return response()->json([
+        'success' => true,
+        'cartCount' => $totalQty,
+        'cartTotal' => $totalAmount
+    ]);
 }
 
+
+      // Remove product
+    public function remove($id)
+    {
+        $cart = Session::get('cart', []);
+
+        if(isset($cart[$id])){
+            unset($cart[$id]);
+            Session::put('cart', $cart);
+        }
+
+        $totalQty = 0;
+        $totalAmount = 0;
+        foreach($cart as $item){
+            $totalQty += $item['quantity'];
+            $totalAmount += $item['total_amount'];
+        }
+
+        return response()->json([
+            'success' => true,
+            'cartCount' => $totalQty,
+            'cartTotal' => $totalAmount
+        ]);
+    }
 
 
 

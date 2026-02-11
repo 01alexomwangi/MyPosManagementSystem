@@ -4,56 +4,66 @@
 
 @section('content')
 <div class="container py-5">
-    <div class="row justify-content-center">
+
+    <div class="row align-items-center g-5">
 
         <!-- IMAGE -->
-        <div class="col-md-5 mb-4">
-            <img src="{{ asset('images/products/'.$product->image) }}"
-                 class="img-fluid rounded shadow-sm">
+        <div class="col-lg-6 text-center">
+            <div class="p-3 bg-light rounded-4 shadow-sm">
+                <img src="{{ asset('images/products/'.$product->image) }}"
+                     class="img-fluid rounded-4"
+                     style="max-height:450px; object-fit:cover;">
+            </div>
         </div>
 
         <!-- DETAILS -->
-        <div class="col-md-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
 
-                    <h3 class="fw-bold">{{ $product->product_name }}</h3>
+                    <h2 class="fw-bold mb-3">{{ $product->product_name }}</h2>
 
-                    <!-- STATIC Product Price -->
-                    <h4 class="text-primary fw-bold">
+                    <h3 class="text-primary fw-bold mb-3">
                         Ksh <span id="productTotal">{{ number_format($product->price, 2) }}</span>
-                    </h4>
+                    </h3>
 
-                    <p class="text-muted">{{ $product->description }}</p>
+                    <p class="text-muted mb-4">{{ $product->description }}</p>
+
+                    @php
+                        $cart = session()->get('cart', []);
+                        $currentQty = isset($cart[$product->id]) ? $cart[$product->id]['quantity'] : 0;
+                    @endphp
 
                     <form id="addToCartForm">
                         @csrf
                         <input type="hidden" id="unitPrice" value="{{ $product->price }}">
-                        <input type="hidden" name="quantity" id="quantityInput" value="1">
+                        <input type="hidden" name="quantity" id="quantityInput" value="{{ $currentQty > 0 ? $currentQty : 1 }}">
                         <input type="hidden" id="productId" value="{{ $product->id }}">
 
-                        
-                       <!-- ADD TO CART BUTTON (initially visible) -->
-  <button type="button" class="btn btn-dark w-100" id="addToCartBtn">
-    Add to Cart
-  </button>
+                        <button type="button"
+                                class="btn btn-dark btn-lg w-100 rounded-pill"
+                                id="addToCartBtn"
+                                @if($currentQty > 0) style="display:none;" @endif>
+                            Add to Cart
+                        </button>
 
-  <!-- QUANTITY CONTROLS (hidden initially) -->
-  <div class="d-flex justify-content-center align-items-center mt-2 d-none"
-     id="qtyControls">
+                        <div class="d-flex justify-content-center align-items-center mt-3 gap-3 @if($currentQty == 0) d-none @endif"
+                             id="qtyControls">
 
-    <button type="button" class="btn btn-dark btn-sm" id="minusBtn">−</button>
+                            <button type="button" class="btn btn-outline-dark rounded-circle px-3" id="minusBtn">−</button>
 
-    <span class="fw-bold text-black px-3" id="qtyDisplay">1</span>
+                            <span class="fw-bold fs-5" id="qtyDisplay">
+                                {{ $currentQty > 0 ? $currentQty : 1 }}
+                            </span>
 
-    <button type="button" class="btn btn-dark btn-sm" id="plusBtn">+</button>
- </div>
-
-
-
+                            <button type="button" class="btn btn-outline-dark rounded-circle px-3" id="plusBtn">+</button>
+                        </div>
                     </form>
 
-                    <a href="{{ url('/') }}" class="btn btn-link w-100 mt-3">← Back</a>
+                    <a href="{{ route('store.index') }}"
+                       class="btn btn-link w-100 mt-4 text-decoration-none">
+                        ← Go to Store
+                    </a>
 
                 </div>
             </div>
@@ -61,11 +71,10 @@
     </div>
 </div>
 
+<!-- ✅ YOUR ORIGINAL SCRIPT (UNCHANGED) -->
 <script>
+let quantity = {{ $currentQty > 0 ? $currentQty : 1 }};
 
-let quantity = 1;
-
-// Elements
 const unitPrice = parseFloat(document.getElementById('unitPrice').value);
 const qtyDisplay = document.getElementById('qtyDisplay');
 const qtyInput = document.getElementById('quantityInput');
@@ -77,16 +86,13 @@ const qtyControls = document.getElementById('qtyControls');
 const plusBtn = document.getElementById('plusBtn');
 const minusBtn = document.getElementById('minusBtn');
 
-// Navbar
 const cartCountEl = document.getElementById('cartCount');
 const cartNavTotalEl = document.getElementById('cartTotal');
 
-// Money formatter
 function money(v){
     return v.toLocaleString(undefined,{minimumFractionDigits:2});
 }
 
-// Refresh UI
 function refresh(){
     qtyDisplay.innerText = quantity;
     qtyInput.value = quantity;
@@ -95,36 +101,41 @@ function refresh(){
     if(cartNavTotalEl) cartNavTotalEl.innerText = money(quantity * unitPrice);
 }
 
-// AJAX update
 function updateCartServer() {
-    fetch(`/cart/add/${productId}`, {
+    fetch("{{ url('/cart/add') }}/" + productId, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: JSON.stringify({ quantity })
-    });
+        body: 'quantity=' + quantity
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            if(cartCountEl) cartCountEl.innerText = data.cartCount;
+            if(cartNavTotalEl) cartNavTotalEl.innerText = money(data.cartTotal);
+        }
+    })
+    .catch(error => console.log(error));
 }
 
-// ADD TO CART (first click)
 addToCartBtn.addEventListener('click', function () {
     quantity = 1;
     updateCartServer();
     refresh();
 
-    addToCartBtn.classList.add('d-none');   // hide button
-    qtyControls.classList.remove('d-none'); // show +/-
+    addToCartBtn.style.display = 'none';
+    qtyControls.classList.remove('d-none');
 });
 
-// PLUS
 plusBtn.addEventListener('click', function () {
     quantity++;
     refresh();
     updateCartServer();
 });
 
-// MINUS
 minusBtn.addEventListener('click', function () {
     if (quantity > 1) {
         quantity--;

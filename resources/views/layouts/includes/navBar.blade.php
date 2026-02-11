@@ -37,30 +37,38 @@
                 <!-- Admin-only buttons -->
                 @auth
                     @if(auth()->user()->isAdmin())
-                        <a href="{{ route('users.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
-                            <i class="fa fa-user"></i> Users
-                        </a>
-                        <a href="{{ route('reports.custom') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
-                            <i class="fa fa-chart-line"></i> Reports
-                        </a>
+                       <a href="{{ route('users.index') }}" 
+                       class="btn {{ request()->routeIs('users.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+                       <i class="fa fa-user"></i> Users
+                   </a>
+
+                  <a href="{{ route('reports.custom') }}" 
+                    class="btn {{ request()->routeIs('reports.custom') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+                   <i class="fa fa-chart-line"></i> Reports
+                    </a>
                     @endif
 
                     <!-- Common POS buttons -->
                    
-                    <a href="{{ route('products.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
-                        <i class="fa fa-box"></i> Products
-                    </a>
-                    <a href="{{ route('sales.index') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
+           <a href="{{ route('products.index') }}"
+            class="btn {{ request()->routeIs('products.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+            <i class="fa fa-box"></i> Products
+           </a>
 
-                        <i class="fa fa-cash-register"></i> Sales
-                    </a>
-                     {{-- ⭐ NEW PENDING SALES BUTTON --}}
-                    <a href="{{ route('cashier.pending') }}" class="btn btn-warning rounded-pill me-2 mb-2">
-                    <i class="fa fa-clock"></i> Pending Sales
-                     </a>
-                    <a href="{{ route('reports.custom') }}" class="btn btn-outline-primary rounded-pill me-2 mb-2">
-                        <i class="fa fa-chart-line"></i> My Sales
-                    </a>
+          <a href="{{ route('sales.index') }}"
+          class="btn {{ request()->routeIs('sales.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+          <i class="fa fa-cash-register"></i> Sales
+          </a>
+
+          <a href="{{ route('cashier.pending') }}"
+             class="btn {{ request()->routeIs('cashier.pending') ? 'btn-warning' : 'btn-outline-warning' }} rounded-pill me-2 mb-2">
+          <i class="fa fa-clock"></i> Pending Sales
+         </a>
+
+         <a href="{{ route('reports.custom') }}"
+            class="btn {{ request()->routeIs('reports.custom') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+         <i class="fa fa-chart-line"></i> My Sales
+         </a>
                 @endauth
             </div>
 
