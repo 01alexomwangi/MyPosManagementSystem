@@ -25,8 +25,15 @@
                     </h5>
 
                     @foreach($cart as $key => $item)
-                    <div class="row align-items-center py-3 border-bottom"
-                         data-key="{{ $key }}">
+                    
+                <div class="row align-items-center py-3 border-bottom"
+                          {{-- That data-key is CRITICAL.
+                                It connects:
+                                Frontend row
+                                → To session item
+                                → To controller --}}
+                         data-key="{{ $key }}">  
+
 
                         <!-- PRODUCT NAME -->
                         <div class="col-md-4">
@@ -68,15 +75,15 @@
                             </span>
                         </div>
 
-                        <!-- REMOVE -->
-                     <div class="col-md-1 text-end">
-    <button type="button"
-            class="btn btn-sm btn-outline-danger removeBtn"
-            title="Remove item">
-        <i class="bi bi-trash"></i>
-    </button>
-</div>
-                    </div>
+                               <!-- REMOVE -->
+                         <div class="col-md-1 text-end">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger removeBtn"
+                                    title="Remove item">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                                      </div>
                     @endforeach
 
                 </div>
@@ -161,7 +168,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-    const cartRows = document.querySelectorAll('[data-key]');
+    const cartRows = document.querySelectorAll('[data-key]');//This selects all cart items
     const cartSubtotalEl = document.getElementById('cartSubtotalDisplay');
     const cartTotalEl = document.getElementById('cartTotalDisplay');
     const cartCountEl = document.getElementById('cartCount');

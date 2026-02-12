@@ -17,7 +17,7 @@ class StoreController extends Controller
         $q->where('product_name', 'like', '%' . $request->search . '%')
           ->orWhere('description', 'like', '%' . $request->search . '%');
     });
-}
+   }
 
     $products = $query->paginate(12);
 

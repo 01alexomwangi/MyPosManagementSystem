@@ -29,16 +29,20 @@
 
                     <p class="text-muted mb-4">{{ $product->description }}</p>
 
-                    @php
+                    @php//PHP for Current Quantity
                         $cart = session()->get('cart', []);
                         $currentQty = isset($cart[$product->id]) ? $cart[$product->id]['quantity'] : 0;
+                        //     Reads current quantity from session cart.
+                        //     If the product is in the cart, we know its quantity.
+                        //     This allows the button & quantity box to render correctly.
                     @endphp
 
                     <form id="addToCartForm">
                         @csrf
                         <input type="hidden" id="unitPrice" value="{{ $product->price }}">
                         <input type="hidden" name="quantity" id="quantityInput" value="{{ $currentQty > 0 ? $currentQty : 1 }}">
-                        <input type="hidden" id="productId" value="{{ $product->id }}">
+                        <input type="hidden" id="productId" value="{{ $product->id }}">    
+                         {{-- JS reads these fields to send AJAX requests. --}}
 
                         <button type="button"
                                 class="btn btn-dark btn-lg w-100 rounded-pill"
@@ -96,7 +100,8 @@ function money(v){
 function refresh(){
     qtyDisplay.innerText = quantity;
     qtyInput.value = quantity;
-
+    //    Updates quantity display, hidden input, and navbar cart total.
+    //    Keeps UI in sync with session/cart state.
     if(cartCountEl) cartCountEl.innerText = quantity;
     if(cartNavTotalEl) cartNavTotalEl.innerText = money(quantity * unitPrice);
 }
