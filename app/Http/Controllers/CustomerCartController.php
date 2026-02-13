@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+
 use App\PendingSale;
-use App\Product;
 use App\PendingSaleItem;
+use App\Product;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
 class CustomerCartController extends Controller
 {
     public function checkout(Request $request)
 {
-    // 1️⃣ Customer must be logged in
     if (!Session::has('customer_id')) {
         return redirect('/customer/login')
             ->with('error', 'Please login first.');
     }
 
-    // 2️⃣ Get cart from SESSION (NOT from request)
     $cart = Session::get('cart', []);
 
     if (count($cart) === 0) {
@@ -27,42 +26,56 @@ class CustomerCartController extends Controller
     }
 
     $customerId = Session::get('customer_id');
-    $total = 0;
 
-    // 3️⃣ Calculate total safely
+    // STEP 1: Group cart items by location
+    $groupByLocation = [];
+
     foreach ($cart as $item) {
-        $total += $item['total_amount'];
+
+        $product = Product::find($item['product_id']);
+        if (!$product) continue;
+
+        $locationId = $product->location_id;
+
+        if (!isset($groupByLocation[$locationId])) {
+            $groupByLocation[$locationId] = [];
+        }
+
+        $groupByLocation[$locationId][] = $item;
     }
 
-   $firstProductId = $cart[array_key_first($cart)]['product_id'];
-   $product = Product::find($firstProductId);
+    // STEP 2: Create pending sale per location
+    foreach ($groupByLocation as $locationId => $items) {
 
-$pendingSale = PendingSale::create([
-    'customer_id' => $customerId,
-    'location_id' => $product->location_id, // <- ensures correct branch
-    'total'       => $total,
-    'status'      => 'pending',             // <- must be pending
-]);
+        $locationTotal = 0;
 
-    // 5️⃣ Save each item
-    foreach ($cart as $item) {
-        PendingSaleItem::create([
-            'pending_sale_id' => $pendingSale->id,
-            'product_id'      => $item['product_id'],
-            'quantity'        => $item['quantity'],
-            'price'           => $item['price'],
-            'total_amount'    => $item['total_amount'],
+        foreach ($items as $item) {
+            $locationTotal += $item['total_amount'];
+        }
+
+        $pendingSale = PendingSale::create([
+            'customer_id' => $customerId,
+            'location_id' => $locationId,
+            'total'       => $locationTotal,
+            'status'      => 'pending',
         ]);
+
+        foreach ($items as $item) {
+            PendingSaleItem::create([
+                'pending_sale_id' => $pendingSale->id,
+                'product_id'      => $item['product_id'],
+                'quantity'        => $item['quantity'],
+                'price'           => $item['price'],
+                'total_amount'    => $item['total_amount'],
+            ]);
+        }
     }
 
-    // 6️⃣ Clear cart after checkout
     Session::forget('cart');
 
-    // 7️⃣ Done
     return redirect('/')
         ->with('success', 'Order sent to cashier for processing!');
 }
-
 
 public function cart()
 {
@@ -86,7 +99,27 @@ public function clearCart()
     $product = Product::findOrFail($id);
     $quantity = (int) $request->quantity;
 
-    if(isset($cart[$id])) {
+    // 🔐 1️⃣ Get selected location from session
+    $selectedLocation = session('selected_location');
+
+    // ❌ 2️⃣ If no location selected
+    if (!$selectedLocation) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Please select a location first.'
+        ]);
+    }
+
+    // ❌ 3️⃣ If product is not in selected location
+    if ($product->location_id != $selectedLocation) {
+        return response()->json([
+            'success' => false,
+            'message' => 'This product is not available in selected location.'
+        ]);
+    }
+
+    // ✅ 4️⃣ If everything is valid, continue adding to cart
+    if (isset($cart[$id])) {
         $cart[$id]['quantity'] = $quantity;
     } else {
         $cart[$id] = [
@@ -105,7 +138,7 @@ public function clearCart()
     $totalQty = 0;
     $totalAmount = 0;
 
-    foreach($cart as $item){
+    foreach ($cart as $item) {
         $totalQty += $item['quantity'];
         $totalAmount += $item['total_amount'];
     }

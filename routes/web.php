@@ -32,6 +32,8 @@ Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer
 Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
 Route::get('/cart', 'CustomerCartController@cart')->name('cart.view');
 Route::post('/cart/remove/{id}', 'CustomerCartController@remove')->name('cart.remove');
+Route::post('/set-location', 'StoreController@setLocation')->name('store.setLocation');
+
 
 
 

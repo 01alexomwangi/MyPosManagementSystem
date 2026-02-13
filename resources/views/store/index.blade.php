@@ -42,20 +42,49 @@
                             {{ $product->product_name }}
                         </h6>
 
+                          <span class="badge bg-secondary">
+                                {{ $product->location->name ?? 'No Branch' }}
+                            </span>
+
                         <p class="text-primary fw-bold fs-5 mb-3">
                             Ksh {{ number_format($product->price, 2) }}
                         </p>
 
+
                         <div class="mt-auto position-relative" style="z-index:2;">
 
-                            <!-- ADD TO CART BUTTON -->
+                                                    <!-- ADD TO CART BUTTON -->
+                                                @php
+                            $selectedLocation = session('selected_location');
+                        @endphp
+
+                        @if(!$selectedLocation)
+
                             <button type="button"
-                                class="btn btn-success btn-sm w-100 addBtn"
-                                data-id="{{ $product->id }}"
-                                data-price="{{ $product->price }}"
-                                @if($currentQty > 0) style="display:none;" @endif>
+                                    class="btn btn-warning btn-sm w-100"
+                                    disabled>
+                                Select location First
+                            </button>
+
+                        @elseif($product->location_id == $selectedLocation)
+
+                            <button type="button"
+                                    class="btn btn-success btn-sm w-100 addBtn"
+                                    data-id="{{ $product->id }}"
+                                    data-price="{{ $product->price }}"
+                                    @if($currentQty > 0) style="display:none;" @endif>
                                 Add to Cart
                             </button>
+
+                        @else
+
+                            <button type="button"
+                                    class="btn btn-secondary btn-sm w-100"
+                                    disabled>
+                                Not Available In Selected location
+                            </button>
+
+                        @endif
 
                             <!-- QTY CONTROLS -->
                             <div class="d-flex justify-content-center align-items-center gap-2 mt-2 qtyBox 

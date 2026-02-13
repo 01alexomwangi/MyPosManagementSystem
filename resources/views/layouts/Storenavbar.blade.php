@@ -3,6 +3,24 @@
     <div class="container">
         <a class="navbar-brand fw-bold" href="{{ url('/') }}">Little Store</a>
 
+             <form method="POST" action="{{ route('store.setLocation') }}">
+                        @csrf
+                        <select name="location_id"
+                                class="form-select"
+                                onchange="this.form.submit()">
+
+                            <option value="">Select Location</option>
+
+                            @foreach(\App\Location::all() as $location)
+                                <option value="{{ $location->id }}"
+                                    {{ session('selected_location') == $location->id ? 'selected' : '' }}>
+                                    {{ $location->name }}
+                                </option>
+                            @endforeach
+
+                        </select>
+                    </form>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarNavDropdown">
             <span class="navbar-toggler-icon"></span>
@@ -17,6 +35,10 @@
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav ms-auto align-items-center">
 
+
+
+
+
                 {{-- SEARCH FORM --}}
                 <li class="nav-item me-4">
                     <form action="{{ route('store.index') }}" method="GET" class="d-flex">
@@ -28,6 +50,9 @@
                         </button>
                     </form>
                 </li>
+
+               
+
 
                 {{-- ACCOUNT --}}
                 @if(Session::has('customer_id'))
