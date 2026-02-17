@@ -21,6 +21,10 @@ class CreateProductsTable extends Migration
             $table->integer('price');
             $table->integer('quantity');
             $table->integer('alert_stock')->default('100');
+            $table->foreignId('location_id')
+          ->nullable()
+          ->constrained()
+          ->onDelete('set null');
             $table->timestamps();
         });
     }

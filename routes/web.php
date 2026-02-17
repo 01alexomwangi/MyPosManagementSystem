@@ -1,23 +1,23 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SaleController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\BrandController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\LocationController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\CustomerCartController;
 
+/*
+|--------------------------------------------------------------------------
+| STORE (ECOMMERCE FRONT)
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', 'StoreController@index')->name('store.index');
 Route::get('/product/{id}', 'StoreController@show')->name('store.show');
+
+Route::post('/set-location', 'StoreController@setLocation')->name('store.setLocation');
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER AUTH
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/customer/register', 'CustomerAuthController@registerForm');
 Route::post('/customer/register', 'CustomerAuthController@register')->name('customer.register');
@@ -26,99 +26,125 @@ Route::get('/customer/login', 'CustomerAuthController@loginForm');
 Route::post('/customer/login', 'CustomerAuthController@login');
 Route::post('/customer/logout', 'CustomerAuthController@logout');
 
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER CART
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/cart', 'CustomerCartController@cart')->name('cart.view');
 Route::post('/cart/add/{id}', 'CustomerCartController@add')->name('cart.add');
 Route::post('/cart/update/{id}', 'CustomerCartController@updateQuantity')->name('cart.update');
-Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
-Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
-Route::get('/cart', 'CustomerCartController@cart')->name('cart.view');
 Route::post('/cart/remove/{id}', 'CustomerCartController@remove')->name('cart.remove');
-Route::post('/set-location', 'StoreController@setLocation')->name('store.setLocation');
+Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
+Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
+
+
+Route::post('/orders', 'OrderController@store')->name('orders.store');
+Route::get('/orders/{id}', 'OrderController@show')->name('orders.show');
+
+Route::get('/payments/{order}/initiate', 'PaymentController@initiate')
+        ->name('payments.initiate');
+
+Route::post('/payment/webhook', 'PaymentController@webhook');
 
 
 
 
 
-Route::get('/cashier/pending', 'CashierController@pendingSales')->name('cashier.pending');
-Route::post('/cashier/complete/{id}', 'CashierController@completeSale')->name('cashier.complete');
-
-
-
+/*
+|--------------------------------------------------------------------------
+| AUTH (STAFF LOGIN)
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/pos', function () {
     return view('welcome');
 });
 
-// Auth Routes
 Route::get('/login', 'AuthController@showLogin')->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', 'AuthController@login');
 Route::get('/register', 'AuthController@showRegister');
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', 'AuthController@register');
 
-// Routes that require login
+/*
+|--------------------------------------------------------------------------
+| PROTECTED ROUTES (AUTH REQUIRED)
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth')->group(function () {
+
+    Route::post('/logout', 'AuthController@logout')->name('logout');
 
     Route::get('/home', function () {
         return view('home');
     });
 
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    /*
+    |--------------------------------------------------------------------------
+    | REPORTS (Now Based on Orders)
+    |--------------------------------------------------------------------------
+    */
 
-    // ----------------------------
-    // REPORTS
-    // ----------------------------
-    // Daily sales report
-Route::get('/reports/daily', 'ReportController@dailySales')
-    ->name('reports.daily');
+    Route::get('/reports/daily', 'ReportController@dailySales')->name('reports.daily');
+    Route::get('/reports/weekly', 'ReportController@weeklySales')->name('reports.weekly');
+    Route::get('/reports/monthly', 'ReportController@monthlySales')->name('reports.monthly');
+    Route::get('/reports/custom', 'ReportController@customReport')->name('reports.custom');
+    Route::get('/reports/receipts', 'ReportController@allReceipts')->name('reports.receipts');
 
-// Weekly sales report
-Route::get('/reports/weekly', 'ReportController@weeklySales')
-    ->name('reports.weekly');
+    Route::get('/reports/export/pdf', 'ReportController@exportPdf')->name('reports.export.pdf');
+    Route::get('/reports/export/excel', 'ReportController@exportExcel')->name('reports.export.excel');
 
-// Monthly sales report
-Route::get('/reports/monthly', 'ReportController@monthlySales')
-    ->name('reports.monthly');
+    /*
+    |--------------------------------------------------------------------------
+    | POS (ORDER SYSTEM — REPLACED SALES)
+    |--------------------------------------------------------------------------
+    */
 
-// Custom date range report (from/to form)
-Route::get('/reports/custom', 'ReportController@customReport')
-    ->name('reports.custom');
+    Route::resource('/orders', 'OrderController');
 
-     Route::get('/reports/receipts', 'ReportController@allReceipts')
-     ->name('reports.receipts');
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCTS & LOCATIONS
+    |--------------------------------------------------------------------------
+    */
 
-     // Export
-Route::get('/reports/export/pdf', 'ReportController@exportPdf')->name('reports.export.pdf');
-Route::get('/reports/export/excel', 'ReportController@exportExcel')->name('reports.export.excel');
-
-
-
-    // ----------------------------
-    // POS Resources
-    // ----------------------------
-  
     Route::resource('/products', 'ProductController');
     Route::resource('/locations', 'LocationController');
-    Route::resource('/sales', 'SaleController');
 
-    // ----------------------------
-    // Manager-Specific Routes
-    // Only managers can see branch users
-    // ----------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGER ROUTES
+    |--------------------------------------------------------------------------
+    */
+
     Route::middleware(['manager'])->group(function () {
         Route::get('/branch/users', function() {
             $manager = auth()->user();
+
             $users = \App\User::where('location_id', $manager->location_id)
                 ->where('role', 'cashier')
                 ->get();
+
             return view('users.branch', compact('users'));
         })->name('branch.users');
     });
 });
 
-// ----------------------------
-// Admin Routes
-// ----------------------------
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware(['auth','admin'])->group(function () {
+
     Route::resource('/users','UserController');
     Route::resource('/brands', 'BrandController');
     Route::resource('/categories', 'CategoryController');
+    Route::get('/logs', 'SystemLogController@logs')
+    ->name('admin.logs');
+
+
 });

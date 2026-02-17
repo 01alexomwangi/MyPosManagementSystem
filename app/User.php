@@ -4,58 +4,69 @@ namespace App;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
     use Notifiable;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mass Assignable
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
         'name',
         'email',
         'password',
-        'is_admin',     // legacy
-        'role',         // new system
-        'location_id'
+        'role',
+        'location_id',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hidden Fields
+    |--------------------------------------------------------------------------
+    */
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /* ======================================   //mutator
-       PASSWORD HANDLING
-    ====================================== */
- 
-    // public function setPasswordAttribute($value)
-    // {
-    //     if ($value) {
-    //         $this->attributes['password'];   //= bcrypt($value);
-    //     }
-    // }
+    /*
+    |--------------------------------------------------------------------------
+    | PASSWORD MUTATOR (Auto Hash)
+    |--------------------------------------------------------------------------
+    */
 
-    /* ======================================
-       BACKWARD COMPATIBILITY
-       (DO NOT REMOVE YET)
-    ====================================== */
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = Hash::make($value);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE CHECK METHODS
+    |--------------------------------------------------------------------------
+    */
 
     public function isAdmin()
     {
-        return $this->role === 'admin' || $this->is_admin == 1;
+        return $this->role === 'admin';
+    }
+
+    public function isManager()
+    {
+        return $this->role === 'manager';
     }
 
     public function isCashier()
     {
         return $this->role === 'cashier';
-    }
-
-    /* ======================================
-       NEW ROLE SYSTEM
-    ====================================== */
-
-    public function isManager()
-    {
-        return $this->role === 'manager';
     }
 
     public function hasRole(string $role)
@@ -68,14 +79,14 @@ class User extends Authenticatable
         return in_array($this->role, $roles);
     }
 
-    /* ======================================
-       RELATIONSHIPS
-    ====================================== */
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
 
     public function location()
     {
         return $this->belongsTo(Location::class);
     }
-     
- 
 }

@@ -4,15 +4,15 @@
 <div class="container">
     <h4>All Receipts</h4>
 
-    @foreach($sales as $sale)
+    @foreach($orders as $order)
         <div class="card mb-3 p-2">
             <div class="d-flex justify-content-between">
-                <strong>Receipt #{{ $sale->id }}</strong>
-                <small>{{ $sale->created_at->format('Y-m-d H:i') }}</small>
+                <strong>Receipt #{{ $order->id }}</strong>
+                <small>{{ $order->created_at->format('Y-m-d H:i') }}</small>
             </div>
             <div>
-                Cashier: {{ $sale->user->name }} <br>
-                Location: {{ $sale->location->name }}
+                Cashier: {{ $order->user->name }} <br>
+                Location: {{ $order->location->name }}
             </div>
             <table class="table table-sm mt-2">
                 <thead>
@@ -24,7 +24,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($sale->items as $item)
+                    @foreach($order->items as $item)
                         <tr>
                             <td>{{ $item->product->name }}</td>
                             <td>{{ $item->quantity }}</td>
@@ -40,7 +40,7 @@
         </div>
     @endforeach
 
-    @if($sales->isEmpty())
+    @if($orders->isEmpty())
         <div class="alert alert-warning">No receipts found for the selected period.</div>
     @endif
 </div>

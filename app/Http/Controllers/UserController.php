@@ -5,18 +5,17 @@ namespace App\Http\Controllers;
 use App\Location;
 use App\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
     /**
-     * Display a listing of users (admin only)
+     * Display a listing of users
      */
     public function index()
     {
-        $users = User::with('location')->get(); // load location for display
-        $locations = Location::all();           // for dropdowns in modals
+        $users = User::with('location')->get();
+        $locations = Location::all();
+
         return view('users.index', compact('users', 'locations'));
     }
 
@@ -30,27 +29,24 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created user in storage
+     * Store a newly created user
      */
     public function store(Request $request)
     {
-        // Validate input
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users,email',
-            'password'    => 'required|confirmed|min:6', // password_confirmation field required
+            'password'    => 'required|confirmed|min:6',
             'role'        => 'required|in:cashier,manager,admin',
             'location_id' => 'required|exists:locations,id',
         ]);
 
-        // Create user
-        $user = User::create([
+        User::create([
             'name'        => $data['name'],
             'email'       => $data['email'],
-            'password'    => Hash::make($data['password']),
+            'password'    => $data['password'], // auto-hashed by mutator
             'role'        => $data['role'],
             'location_id' => $data['location_id'],
-            'is_admin'    => $data['role'] === 'admin' ? 1 : 0, // legacy flag
         ]);
 
         return redirect()->route('users.index')
@@ -58,12 +54,13 @@ class UserController extends Controller
     }
 
     /**
-     * Show the form for editing the specified user
+     * Show the form for editing a user
      */
     public function edit($id)
     {
         $user = User::findOrFail($id);
         $locations = Location::all();
+
         return view('users.edit', compact('user', 'locations'));
     }
 
@@ -74,25 +71,21 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Validate input
         $data = $request->validate([
             'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email,'.$user->id,
+            'email'       => 'required|email|unique:users,email,' . $user->id,
             'password'    => 'nullable|confirmed|min:6',
             'role'        => 'required|in:cashier,manager,admin',
             'location_id' => 'required|exists:locations,id',
         ]);
 
-        // Update user fields
         $user->name        = $data['name'];
         $user->email       = $data['email'];
         $user->role        = $data['role'];
         $user->location_id = $data['location_id'];
-        $user->is_admin    = $data['role'] === 'admin' ? 1 : 0;
 
-        // Update password if provided
         if (!empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
+            $user->password = $data['password']; // auto-hashed
         }
 
         $user->save();
@@ -102,7 +95,7 @@ class UserController extends Controller
     }
 
     /**
-     * Remove the specified user from storage
+     * Remove the specified user
      */
     public function destroy($id)
     {

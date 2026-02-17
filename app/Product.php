@@ -32,17 +32,17 @@ class Product extends Model
             return $this->belongsTo(Location::class);
          }
 
-         public function saleItems()
-          {
-         return $this->hasMany(SaleItem::class);
-          }
+         // public function saleItems()
+         //  {
+         // return $this->hasMany(SaleItem::class);
+         //  }
 
-           //$product->saleItems  // all SaleItem rows that reference this product
+         //   //$product->saleItems  // all SaleItem rows that reference this product
            
-          // 🔗 One product can appear in many pending sale items
-           public function pendingSaleItems()
-          {
-            return $this->hasMany(PendingSaleItem::class, 'product_id');
-           }
+         //  // 🔗 One product can appear in many pending sale items
+         //   public function pendingSaleItems()
+         //  {
+         //    return $this->hasMany(PendingSaleItem::class, 'product_id');
+         //   }
 
 }

@@ -18,8 +18,8 @@ class Location extends Model
     return $this->hasMany(User::class);
      }
 
-    public function sales()
+    public function orders()
     {
-        return $this->hasMany(Sale::class);
+        return $this->hasMany(Order::class);
     }
 }

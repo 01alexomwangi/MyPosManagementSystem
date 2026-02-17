@@ -46,6 +46,11 @@
                     class="btn {{ request()->routeIs('reports.custom') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
                    <i class="fa fa-chart-line"></i> Reports
                     </a>
+
+                     <a href="{{ route('admin.logs') }}"
+            class="btn {{ request()->routeIs('admin.logs') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+         <i class="fa fa-chart-line"></i> My logs
+         </a>
                     @endif
 
                     <!-- Common POS buttons -->
@@ -55,15 +60,15 @@
             <i class="fa fa-box"></i> Products
            </a>
 
-          <a href="{{ route('sales.index') }}"
-          class="btn {{ request()->routeIs('sales.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-          <i class="fa fa-cash-register"></i> Sales
+          <a href="{{ route('orders.index') }}"
+          class="btn {{ request()->routeIs('orders.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
+          <i class="fa fa-cash-register"></i> Orders
           </a>
 
-          <a href="{{ route('cashier.pending') }}"
+          {{-- <a href="{{ route('cashier.pending') }}"
              class="btn {{ request()->routeIs('cashier.pending') ? 'btn-warning' : 'btn-outline-warning' }} rounded-pill me-2 mb-2">
           <i class="fa fa-clock"></i> Pending Sales
-         </a>
+         </a> --}}
 
          <a href="{{ route('reports.custom') }}"
             class="btn {{ request()->routeIs('reports.custom') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">

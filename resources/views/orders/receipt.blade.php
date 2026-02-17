@@ -7,15 +7,15 @@
 
             <div class="text-center mb-3">
                 <h3>{{ config('app.name') }}</h3>
-                <small>{{ $sale->location->name ?? '' }}</small><br>
-                <small>Date: {{ $sale->created_at->format('d M Y H:i') }}</small>
+                <small>{{ $order->location->name ?? '' }}</small><br>
+                <small>Date: {{ $order->created_at->format('d M Y H:i') }}</small>
             </div>
 
             <hr>
 
             <p>
-                <strong>Cashier:</strong> {{ $sale->user->name }} <br>
-                <strong>Receipt #:</strong> {{ $sale->id }}
+                <strong>Cashier:</strong> {{ $order->user->name }} <br>
+                <strong>Receipt #:</strong> {{ $order->id }}
             </p>
 
             <table class="table table-sm">
@@ -28,7 +28,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($sale->items as $item)
+                    @foreach($order->items as $item)
                     <tr>
                         <td>{{ $item->product->product_name }}</td>
                         <td>{{ $item->quantity }}</td>
@@ -42,9 +42,9 @@
             <hr>
 
             <p>
-                <strong>Total:</strong> {{ number_format($sale->total,2) }} <br>
-                <strong>Paid:</strong> {{ number_format($sale->paid,2) }} <br>
-                <strong>Balance:</strong> {{ number_format($sale->balance,2) }}
+                <strong>Total:</strong> {{ number_format($order->total,2) }} <br>
+                <strong>Paid:</strong> {{ number_format($order->paid,2) }} <br>
+                <strong>Balance:</strong> {{ number_format($order->balance,2) }}
             </p>
 
             <div class="text-center mt-3">
@@ -52,7 +52,7 @@
                     <i class="fa fa-print"></i> Print Receipt
                 </button>
 
-                <a href="{{ route('sales.index') }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('orders.index') }}" class="btn btn-secondary btn-sm">
                     New Sale
                 </a>
             </div>

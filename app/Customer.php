@@ -18,14 +18,14 @@ class Customer extends Authenticatable
     ];
 
 
-      public function sales()
+      public function orders()
     {
-        return $this->hasMany(Sale::class, 'customer_id');
+        return $this->hasMany(Order::class, 'customer_id');
     }
 
      // 🔗 One customer can have many pending sales
-    public function pendingSales()
-    {
-        return $this->hasMany(PendingSale::class, 'customer_id');
-    }
+    // public function pendingSales()
+    // {
+    //     return $this->hasMany(PendingSale::class, 'customer_id');
+    // }
 }

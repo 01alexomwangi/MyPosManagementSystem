@@ -1,271 +1,331 @@
-  @extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
 
-    <div class="row">
+    {{-- ALERTS --}}
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
-        <!-- LEFT SIDE: productS TABLE -->
-        <div class="col-md-8">
-            <div class="card">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-                <div class="card-header d-flex justify-content-between align-items-center"> 
-                    <h4 style="float: left">Order Products</h4>
+    <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
+        @csrf
 
-                    <span>
-                        <i class="fa fa-orders"></i>  <strong><em>Orders</em></strong>
-                    </span>
+        <div class="row">
 
-                    <a href="#" style="float: right" class="btn btn-sm btn-dark" data-toggle="modal" data-target="#addproduct">
-                        <i class="fa fa-plus"></i> Add New Products
-                    </a>
-                </div>
+            {{-- LEFT SIDE --}}
+            <div class="col-md-9">
 
-                <div class="card-body">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Product Name</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Dis (%)</th>     
-                                <th>Total</th>
-                                <th><a href="#" class="btn btn-sm btn-success add_more rounded-circle"><i class="fa fa-plus-circle"></i></a></th>
-                            </tr>
-                        </thead>
-                        <tbody class="addMoreProduct"> 
-                             <tr>
-                                <td class="no">1</td>
-                                <td>
-                                    
-                        <select name="product_id[]" id="product_id" class="form-control product_id">
-                            <option value="">Select Item</option>
-                            @foreach ($products as $product)
-                            <option data-price ="{{ $product->price }}" value="{{ $product->id }}"> {{ $product->product_name }}</option>    
-                            @endforeach
-                        </select>            
-                                </td>
-                            <td>
-                              <input type="number" name="quantity[]" id="quantity" 
-                              class="form-control quantity">  
-                            </td>
-                             <td>
-                              <input type="number" name="price[]" id="price" 
-                              class="form-control price ">  
-                            </td>
-                             <td>
-                              <input type="number" name="discount[]" id="discount" 
-                              class="form-control discount">  
-                            </td>
-                             <td>
-                              <input type="number" name="total_amount[]" id="total_amount" 
-                              class="form-control total_amount">  
-                            </td>
-                            <td><a href="#" class="btn btn-sm btn-danger rounded-circle "><i class="fa fa-times-circle"></i></a></td> 
-                             </tr>
+                {{-- PRODUCTS --}}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4>Products</h4>
+                    </div>
 
-                        </tbody>
-                        
-                    </table>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Head section -->
-
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Total <b class="total"> 0.00</b></h4>
-                </div>
-                <div class="card-body">
-                    <div class="panel">
+                    <div class="card-body">
                         <div class="row">
-                            <table class="table table-stripped">
-                                <tr>
-                                    <td>
-                               <label for="">Customer Name</label>
-                              
-                                <input type="text" name="customer_name" id="" class="form-control">
-                               </div>   
-                                    </td>
-                                    <td>
-                              <label for="">Customer Phone</label>
-                            
-                              <input type="number" name="customer_phone" id="" class="form-control">
-                              </div>
-                                    </td>
-                                </tr>
-                            </table>
-                          
 
-                            <td> Payment Method <br>
-                                <span class="radio-item">
-                                <input type="radio" name="payment_method" id="payment_method"
-                                 class="true" value="cash" checked="checked">
-                                 <label for="payment_method"> <i class="fa fa-money-bill text-success"> </i> Cash</label>
-                                </span>
+                            @foreach($products as $product)
+                                <div class="col-md-3 mb-3">
+                                    <div class="card product-card h-100">
 
-                                  <span class="radio-item">
-                                <input type="radio" name="payment_method" id="payment_method"
-                                 class="true" value="bank transfer" >
-                                 <label for="payment_method"> <i class="fa fa-university text-danger"> </i> Bank Transfer</label>
-                                </span>
+                                        <div class="card-body text-center p-2">
 
-                                  <span class="radio-item">
-                                <input type="radio" name="payment_method" id="payment_method"
-                                 class="true" value="Credit Card" >
-                                 <label for="payment_method"> <i class="fa fa-credit-card text-info"> </i> Credit Card</label>
-                                </span>
-                            </td><br>
+                                            <div class="product-image mb-2">
+                                                @if($product->image)
+                                                    <img src="{{ asset('images/products/'.$product->image) }}">
+                                                @else
+                                                    <img src="{{ asset('images/products/default.png') }}">
+                                                @endif
+                                            </div>
 
-                             <td> Payment 
-                                <input type="number" name="paid_amount" id="paid_amount" class="form-control">
-                             </td>
+                                            <h6 class="font-weight-bold mb-1">
+                                                {{ $product->product_name }}
+                                            </h6>
 
-                             <td>
-                                Returning change 
-                                <input type="number" readonly name="balance" id="paid_amount" class="form-control">
-                             </td>
+                                            <div class="badge badge-primary mb-1">
+                                                KES {{ number_format($product->price,2) }}
+                                            </div>
 
-                        </div>
+                                            <div class="small text-muted mb-2">
+                                                Stock: {{ $product->quantity }}
+                                            </div>
+
+                                            <button type="button"
+                                                    class="btn btn-success btn-sm btn-block addProduct"
+                                                    data-id="{{ $product->id }}"
+                                                    data-name="{{ $product->product_name }}"
+                                                    data-price="{{ $product->price }}"
+                                                    data-stock="{{ $product->quantity }}"
+                                                    {{ $product->quantity <= 0 ? 'disabled' : '' }}>
+                                                Add
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+
                         </div>
                     </div>
                 </div>
+
+
+                {{-- CART --}}
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Cart</h4>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product</th>
+                                        <th width="120">Qty</th>
+                                        <th width="120">Price</th>
+                                        <th width="120">Total</th>
+                                        <th width="60">Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-4">
+                                <h5>Total: 
+                                    <strong>KES <span id="grandTotal">0.00</span></strong>
+                                </h5>
+                                <input type="hidden" name="total" id="totalInput">
+                            </div>
+
+                            <div class="col-md-4 cashSection">
+                                <label>Paid Amount</label>
+                                <input type="number"
+                                       step="0.01"
+                                       name="paid_amount"
+                                       class="form-control">
+                            </div>
+
+                            <div class="col-md-4 cashSection">
+                                <label>Balance</label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="balance"
+                                       readonly>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
+
+
+            {{-- RIGHT SIDE --}}
+            <div class="col-md-3">
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h4>Payment</h4>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="form-check">
+                            <input type="radio"
+                                   class="form-check-input paymentMethod"
+                                   name="payment_method"
+                                   value="cash"
+                                   checked>
+                            <label class="form-check-label">Cash</label>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="radio"
+                                   class="form-check-input paymentMethod"
+                                   name="payment_method"
+                                   value="littlepay">
+                            <label class="form-check-label">
+                                Little Pay (Online)
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary btn-block"
+                        id="submitBtn">
+                    Complete Sale
+                </button>
+
+            </div>
+
         </div>
-
-    </div>
-
+    </form>
 </div>
-
-    {{--Modal of adding new product--}}
-         {{--Modal--}}
- <div class="modal right fade" id="addproduct" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title" id="staticBackdropLabel">Add product</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-
-      <div class="modal-body">
-          <form action="{{ route('products.store')}}" method="post">
-            @csrf
-            <div class="form-group">
-                <label for="">Product Name</label>
-                <input type="text" name="product_name" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">Brand</label>
-                <input type="text" name="brand" id="" class="form-control">
-            </div>
-            
-             <div class="form-group">
-                <label for="">Price</label>
-                <input type="number" name="price" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">Quantity</label>
-                <input type="number" name="quantity" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">Alert Stock</label>
-                <input type="number" name="alert_stock" id="" class="form-control">
-            </div>
-             <div class="form-group">
-                <label for="">description</label>
-                <textarea name="description" id="" cols="30" rows="2" class="form-control"></textarea>
-                
-            </div>
-            
-            <div class="modal-footer">
-                <button class="btn btn-primary btn-block">Save Product</button>
-            </div>
-          </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-     <style>
-        .modal.right .modal-dialog{
-            /*position:absolute;*/
-
-            top: 0;
-            right: 0;
-            margin-right: 19vh;
-        }
-
-        .modal.fade:not(.in).right .modal-dialog{
-            -wekit-transform: translate3d(25%,0,0);
-            transform: translate3d(25%,0,0);
-        }
-     </style>
 @endsection
-   
- @section('script')
-   <script>
-    // $(document).ready(function(){
-    //     alert(1);
-    // })
 
-    $(' .add_more').on('click', function(){
-        var product = $(' .product_id').html();
-        var numberofrow = ($(' .addMoreProduct tr').length - 0) + 1;
-        var tr = '<tr><td class "no">' + numberofrow + '</td>' +
-            '<td><select class="form-control product_id" name= "product_id[]">'+ product +
-                ' </select></td>' +
-                '<td><input type="number" name="quantity[]" class="form-control quantity"> </td>'+
-                '<td><input type="number" name="price[]" class="form-control price"> </td>'+
-                '<td><input type="number" name="discount[]" class="form-control discount"> </td>'+
-                '<td><input type="number" name="total_amount[]" class="form-control total_amount"> </td>'+
-                '<td> <a class="btn btn-danger btn-sm delete rounded-circle"> <i class="fa fa-times-circle" </a></td>';
-                $('.addMoreProduct').append(tr); 
-    })
 
-    //delete a row 
-    $('.addMoreProduct').delegate('.delete','click',function(){
-        $(this).parent().parent().remove();
-    })
+@section('script')
+<script>
+$(document).ready(function(){
 
-    function TotalAmount(){
-        // logic is here 
-        var total = 0;
-        $('.total_amount').each(function(i,e){
-            var amount =$(this).val() - 0;
-            total += amount;
-        });
+    let cartIndex = 0;
 
-         $('.total').html(total);
+    // ADD PRODUCT
+    $('.addProduct').click(function(){
+
+        let id = $(this).data('id');
+        let name = $(this).data('name');
+        let price = parseFloat($(this).data('price'));
+        let stock = parseInt($(this).data('stock'));
+
+        let existingRow = $('#cartBody').find('tr[data-id="'+id+'"]');
+
+        if(existingRow.length){
+            let qtyInput = existingRow.find('.qty');
+            let currentQty = parseInt(qtyInput.val());
+
+            if(currentQty < stock){
+                qtyInput.val(currentQty + 1);
+                updateRow(existingRow);
+            }
+            return;
+        }
+
+        let row = `
+        <tr data-id="${id}">
+            <td>${cartIndex + 1}</td>
+            <td>${name}</td>
+
+            <input type="hidden"
+                   name="items[${cartIndex}][product_id]"
+                   value="${id}">
+
+            <td>
+                <input type="number"
+                       name="items[${cartIndex}][quantity]"
+                       class="form-control qty"
+                       value="1"
+                       min="1"
+                       max="${stock}">
+            </td>
+
+            <td>
+                <input type="text"
+                       class="form-control price"
+                       value="${price}"
+                       readonly>
+            </td>
+
+            <td>
+                <input type="text"
+                       class="form-control rowTotal"
+                       value="${price}"
+                       readonly>
+            </td>
+
+            <td>
+                <button type="button"
+                        class="btn btn-danger btn-sm removeRow">
+                    ✕
+                </button>
+            </td>
+        </tr>
+        `;
+
+        $('#cartBody').append(row);
+        cartIndex++;
+        calculateTotal();
+    });
+
+
+    // REMOVE
+    $('#cartBody').on('click','.removeRow',function(){
+        $(this).closest('tr').remove();
+        calculateTotal();
+    });
+
+
+    // UPDATE QTY
+    $('#cartBody').on('keyup change','.qty',function(){
+        updateRow($(this).closest('tr'));
+    });
+
+
+    function updateRow(row){
+        let qty = parseFloat(row.find('.qty').val()) || 0;
+        let price = parseFloat(row.find('.price').val()) || 0;
+        row.find('.rowTotal').val((qty * price).toFixed(2));
+        calculateTotal();
     }
 
-    $('.addMoreProduct').delegate('.product_id','change',function(){
-        var tr = $(this).parent().parent();
-        var price = tr.find('.product_id option:selected').attr('data-price');
-        tr.find('.price').val(price);
-        var qty = tr.find('.quantity').val() - 0;
-        var disc = tr.find('.discount').val() - 0;
-        var price = tr.find('.price').val() - 0;
-        var total_amount = (qty * price) - ((qty * price * disc) /100 );
-        tr.find('.total_amount').val(total_amount);
-        TotalAmount();
-    })
 
-    $('.addMoreProduct').delegate('.quantity, .discount','keyup',function(){
-        var tr = $(this).parent().parent();
-        var qty = tr.find('.quantity').val() - 0;
-        var disc = tr.find('.discount').val() - 0;
-        var price = tr.find('.price').val() - 0;
-        var total_amount = (qty * price) - ((qty * price * disc) /100 );
-        tr.find('.total_amount').val(total_amount);
-        TotalAmount();
-    })
+    function calculateTotal(){
+        let total = 0;
 
-    </script>
- @endsection
+        $('.rowTotal').each(function(){
+            total += parseFloat($(this).val()) || 0;
+        });
+
+        $('#grandTotal').text(total.toFixed(2));
+        $('#totalInput').val(total.toFixed(2));
+
+        let paid = parseFloat($('input[name="paid_amount"]').val()) || 0;
+        $('#balance').val((paid - total).toFixed(2));
+    }
+
+
+    $('input[name="paid_amount"]').on('keyup change',function(){
+        calculateTotal();
+    });
+
+
+    // SWITCH PAYMENT
+    $('.paymentMethod').change(function(){
+
+        let method = $('input[name="payment_method"]:checked').val();
+
+        if(method === 'littlepay'){
+            $('.cashSection').hide();
+            $('#submitBtn').text('Proceed to Online Payment');
+        } else {
+            $('.cashSection').show();
+            $('#submitBtn').text('Complete Sale');
+        }
+
+    });
+
+});
+</script>
+
+<style>
+.product-card:hover{
+    transform:scale(1.03);
+    transition:0.2s ease-in-out;
+}
+
+.product-image{
+    height:100px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.product-image img{
+    max-height:100%;
+    max-width:100%;
+    object-fit:contain;
+}
+</style>
+@endsection
