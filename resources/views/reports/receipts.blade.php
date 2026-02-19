@@ -2,46 +2,77 @@
 
 @section('content')
 <div class="container">
-    <h4>All Receipts</h4>
+    <h4 class="mb-4">Receipts</h4>
 
-    @foreach($orders as $order)
-        <div class="card mb-3 p-2">
-            <div class="d-flex justify-content-between">
-                <strong>Receipt #{{ $order->id }}</strong>
-                <small>{{ $order->created_at->format('Y-m-d H:i') }}</small>
+    <form method="GET" class="mb-3">
+        <div class="row">
+            <div class="col-md-3">
+                <input type="date" name="from" class="form-control" value="{{ $from ?? '' }}">
             </div>
-            <div>
-                Cashier: {{ $order->user->name }} <br>
-                Location: {{ $order->location->name }}
+            <div class="col-md-3">
+                <input type="date" name="to" class="form-control" value="{{ $to ?? '' }}">
             </div>
-            <table class="table table-sm mt-2">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($order->items as $item)
-                        <tr>
-                            <td>{{ $item->product->name }}</td>
-                            <td>{{ $item->quantity }}</td>
-                            <td>{{ number_format($item->price, 2) }}</td>
-                            <td>{{ number_format($item->quantity * $item->price, 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <div class="text-end fw-bold">
-                Total: {{ number_format($sale->total, 2) }}
+            <div class="col-md-2">
+                <button class="btn btn-primary">Filter</button>
             </div>
         </div>
-    @endforeach
+    </form>
 
-    @if($orders->isEmpty())
-        <div class="alert alert-warning">No receipts found for the selected period.</div>
-    @endif
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Source / Staff</th>
+                <th class="text-end">Total</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($orders as $order)
+                <tr>
+                    <td>{{ $order->id }}</td>
+
+                    <td>
+                        {{ $order->created_at->format('d M Y H:i') }}
+                    </td>
+
+                    <td>
+                        {{ optional($order->location)->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        @if($order->source === 'online')
+                            <span class="badge bg-primary">Online</span>
+                        @elseif($order->source === 'pos')
+                            @if($order->user)
+                                {{ $order->user->name }}
+                            @else
+                                <span class="badge bg-secondary">Pos online</span>
+                            @endif
+                        @endif
+                    </td>
+
+                    <td class="text-end">
+                        {{ number_format($order->total, 2) }}
+                    </td>
+
+                    <td>
+                        <a href="{{ route('orders.show', $order->id) }}" 
+                           class="btn btn-sm btn-success">
+                           Print
+                        </a>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center">
+                        No receipts found
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 </div>
 @endsection

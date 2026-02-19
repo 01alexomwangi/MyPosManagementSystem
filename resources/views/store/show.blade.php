@@ -24,72 +24,84 @@
                     <h2 class="fw-bold mb-3">{{ $product->product_name }}</h2>
 
                     <h3 class="text-primary fw-bold mb-3">
-                        Ksh <span id="productTotal">{{ number_format($product->price, 2) }}</span>
+                        Ksh {{ number_format($product->price, 2) }}
                     </h3>
 
-                      <span class="badge bg-secondary">
-                                {{ $product->location->name ?? 'No Branch' }}
-                      </span>
+                    <span class="badge bg-secondary">
+                        {{ $product->location->name ?? 'No Branch' }}
+                    </span>
 
-                    <p class="text-muted mb-4">{{ $product->description }}</p>
+                    <p class="text-muted mt-3 mb-4">
+                        {{ $product->description }}
+                    </p>
 
                     @php
                         $cart = session()->get('cart', []);
-                        $currentQty = isset($cart[$product->id]) ? $cart[$product->id]['quantity'] : 0;
+                        $currentQty = isset($cart[$product->id])
+                            ? $cart[$product->id]['quantity']
+                            : 0;
+
+                        $selectedLocation = session('selected_location');
                     @endphp
 
+                    <!-- FORM -->
                     <form id="addToCartForm">
                         @csrf
-                        <input type="hidden" id="unitPrice" value="{{ $product->price }}">
-                        <input type="hidden" name="quantity" id="quantityInput" value="{{ $currentQty > 0 ? $currentQty : 1 }}">
-                        <input type="hidden" id="productId" value="{{ $product->id }}">    
-                         {{-- JS reads these fields to send AJAX requests. --}}
 
-                        
-                                                    <!-- ADD TO CART BUTTON -->
-                                                @php
-                            $selectedLocation = session('selected_location');
-                        @endphp
+                        <input type="hidden" id="unitPrice"
+                               value="{{ $product->price }}">
 
+                        <input type="hidden" id="productId"
+                               value="{{ $product->id }}">
+
+                        <!-- BUTTON LOGIC -->
                         @if(!$selectedLocation)
 
                             <button type="button"
-                                    class="btn btn-warning btn-sm w-100"
+                                    class="btn btn-warning w-100"
                                     disabled>
-                                Select location First
+                                Select Location First
                             </button>
 
-                        @elseif($product->location_id == $selectedLocation)
+                        @elseif($product->location_id != $selectedLocation)
 
                             <button type="button"
-                                    class="btn btn-success btn-sm w-100 addBtn"
-                                    data-id="{{ $product->id }}"
-                                    data-price="{{ $product->price }}"
-                                    @if($currentQty > 0) style="display:none;" @endif>
-                                Add to Cart
+                                    class="btn btn-secondary w-100"
+                                    disabled>
+                                Not Available In Selected Location
                             </button>
 
                         @else
 
+                            <!-- ADD BUTTON -->
                             <button type="button"
-                                    class="btn btn-secondary btn-sm w-100"
-                                    disabled>
-                                Not Available In Selected location
+                                    id="addToCartBtn"
+                                    class="btn btn-success w-100"
+                                    @if($currentQty > 0) style="display:none;" @endif>
+                                Add to Cart
                             </button>
+
+                            <!-- QTY CONTROLS -->
+                            <div class="d-flex justify-content-center align-items-center mt-3 gap-3
+                                 @if($currentQty == 0) d-none @endif"
+                                 id="qtyControls">
+
+                                <button type="button"
+                                        class="btn btn-outline-dark rounded-circle px-3"
+                                        id="minusBtn">−</button>
+
+                                <span class="fw-bold fs-5"
+                                      id="qtyDisplay">
+                                    {{ $currentQty > 0 ? $currentQty : 1 }}
+                                </span>
+
+                                <button type="button"
+                                        class="btn btn-outline-dark rounded-circle px-3"
+                                        id="plusBtn">+</button>
+                            </div>
 
                         @endif
 
-                        <div class="d-flex justify-content-center align-items-center mt-3 gap-3 @if($currentQty == 0) d-none @endif"
-                             id="qtyControls">
-
-                            <button type="button" class="btn btn-outline-dark rounded-circle px-3" id="minusBtn">−</button>
-
-                            <span class="fw-bold fs-5" id="qtyDisplay">
-                                {{ $currentQty > 0 ? $currentQty : 1 }}
-                            </span>
-
-                            <button type="button" class="btn btn-outline-dark rounded-circle px-3" id="plusBtn">+</button>
-                        </div>
                     </form>
 
                     <a href="{{ route('store.index') }}"
@@ -103,78 +115,87 @@
     </div>
 </div>
 
-<!-- ✅ YOUR ORIGINAL SCRIPT (UNCHANGED) -->
 <script>
-let quantity = {{ $currentQty > 0 ? $currentQty : 1 }};
+document.addEventListener("DOMContentLoaded", function() {
 
-const unitPrice = parseFloat(document.getElementById('unitPrice').value);
-const qtyDisplay = document.getElementById('qtyDisplay');
-const qtyInput = document.getElementById('quantityInput');
-const productId = document.getElementById('productId').value;
+    let quantity = {{ $currentQty > 0 ? $currentQty : 1 }};
 
-const addToCartBtn = document.getElementById('addToCartBtn');
-const qtyControls = document.getElementById('qtyControls');
+    const unitPrice = parseFloat(document.getElementById('unitPrice')?.value || 0);
+    const productId = document.getElementById('productId')?.value;
 
-const plusBtn = document.getElementById('plusBtn');
-const minusBtn = document.getElementById('minusBtn');
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const qtyControls = document.getElementById('qtyControls');
+    const qtyDisplay = document.getElementById('qtyDisplay');
 
-const cartCountEl = document.getElementById('cartCount');
-const cartNavTotalEl = document.getElementById('cartTotal');
+    const plusBtn = document.getElementById('plusBtn');
+    const minusBtn = document.getElementById('minusBtn');
 
-function money(v){
-    return v.toLocaleString(undefined,{minimumFractionDigits:2});
-}
+    const cartCountEl = document.getElementById('cartCount');
+    const cartNavTotalEl = document.getElementById('cartTotal');
 
-function refresh(){
-    qtyDisplay.innerText = quantity;
-    qtyInput.value = quantity;
-    //    Updates quantity display, hidden input, and navbar cart total.
-    //    Keeps UI in sync with session/cart state.
-    if(cartCountEl) cartCountEl.innerText = quantity;
-    if(cartNavTotalEl) cartNavTotalEl.innerText = money(quantity * unitPrice);
-}
-
-function updateCartServer() {
-    fetch("{{ url('/cart/add') }}/" + productId, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'quantity=' + quantity
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.success){
-            if(cartCountEl) cartCountEl.innerText = data.cartCount;
-            if(cartNavTotalEl) cartNavTotalEl.innerText = money(data.cartTotal);
-        }
-    })
-    .catch(error => console.log(error));
-}
-
-addToCartBtn.addEventListener('click', function () {
-    quantity = 1;
-    updateCartServer();
-    refresh();
-
-    addToCartBtn.style.display = 'none';
-    qtyControls.classList.remove('d-none');
-});
-
-plusBtn.addEventListener('click', function () {
-    quantity++;
-    refresh();
-    updateCartServer();
-});
-
-minusBtn.addEventListener('click', function () {
-    if (quantity > 1) {
-        quantity--;
-        refresh();
-        updateCartServer();
+    function money(v){
+        return Number(v).toLocaleString(undefined,{
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+        });
     }
+
+    function refreshUI(){
+        if(qtyDisplay) qtyDisplay.innerText = quantity;
+    }
+
+    function updateCartServer() {
+
+        fetch("{{ url('/cart/add') }}/" + productId, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'quantity=' + quantity
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success){
+                if(cartCountEl) cartCountEl.innerText = data.cartCount;
+                if(cartNavTotalEl) cartNavTotalEl.innerText = money(data.cartTotal);
+            }
+        })
+        .catch(error => console.log(error));
+    }
+
+    if(addToCartBtn){
+        addToCartBtn.addEventListener('click', function () {
+
+            quantity = 1;
+
+            updateCartServer();
+            refreshUI();
+
+            addToCartBtn.style.display = 'none';
+            qtyControls.classList.remove('d-none');
+        });
+    }
+
+    if(plusBtn){
+        plusBtn.addEventListener('click', function () {
+            quantity++;
+            refreshUI();
+            updateCartServer();
+        });
+    }
+
+    if(minusBtn){
+        minusBtn.addEventListener('click', function () {
+            if(quantity > 1){
+                quantity--;
+                refreshUI();
+                updateCartServer();
+            }
+        });
+    }
+
 });
 </script>
 

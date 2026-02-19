@@ -3,79 +3,109 @@
 namespace App\Http\Controllers;
 
 
-use App\PendingSale;
-use App\PendingSaleItem;
+use App\Order;
+use App\OrderItem;
+use App\Payment;
+use Illuminate\Support\Facades\DB;
 use App\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
 class CustomerCartController extends Controller
 {
-    public function checkout(Request $request)
+   public function checkout(Request $request)
 {
     if (!Session::has('customer_id')) {
         return redirect('/customer/login')
             ->with('error', 'Please login first.');
     }
 
+     $request->validate([
+        'delivery_method' => 'required|in:pickup,rider'
+    ]);
+
     $cart = Session::get('cart', []);
 
     if (count($cart) === 0) {
-        return redirect()->back()
-            ->with('error', 'Your cart is empty.');
+        return back()->with('error', 'Your cart is empty.');
+    }
+
+    $selectedLocation = session('selected_location');
+
+    if (!$selectedLocation) {
+        return back()->with('error', 'Please select a location first.');
     }
 
     $customerId = Session::get('customer_id');
 
-    // STEP 1: Group cart items by location
-    $groupByLocation = [];
+    try {
 
-    foreach ($cart as $item) {
+        $order = DB::transaction(function () use ($cart, $customerId, $selectedLocation, $request) {
 
-        $product = Product::find($item['product_id']);
-        if (!$product) continue;
+            $total = 0;
 
-        $locationId = $product->location_id;
+            foreach ($cart as $item) {
+                $total += $item['total_amount'];
+            }
 
-        if (!isset($groupByLocation[$locationId])) {
-            $groupByLocation[$locationId] = [];
-        }
 
-        $groupByLocation[$locationId][] = $item;
-    }
+               // 🚚 Delivery Logic
+            $deliveryFee = 0;
 
-    // STEP 2: Create pending sale per location
-    foreach ($groupByLocation as $locationId => $items) {
+            if ($request->delivery_method === 'rider') {
+                $deliveryFee = 200; // You can improve this later
+            }
 
-        $locationTotal = 0;
+            $finalTotal = $total + $deliveryFee;
 
-        foreach ($items as $item) {
-            $locationTotal += $item['total_amount'];
-        }
-
-        $pendingSale = PendingSale::create([
-            'customer_id' => $customerId,
-            'location_id' => $locationId,
-            'total'       => $locationTotal,
-            'status'      => 'pending',
-        ]);
-
-        foreach ($items as $item) {
-            PendingSaleItem::create([
-                'pending_sale_id' => $pendingSale->id,
-                'product_id'      => $item['product_id'],
-                'quantity'        => $item['quantity'],
-                'price'           => $item['price'],
-                'total_amount'    => $item['total_amount'],
+            $order = Order::create([
+                'order_number' => 'ORD-' . strtoupper(uniqid()),
+                'user_id' => null, // Online order
+                'customer_id' => $customerId,
+                'location_id' => $selectedLocation,
+                'source' => 'online',
+                 'total' => $finalTotal,
+                'delivery_method' => $request->delivery_method,
+                'delivery_fee' => $deliveryFee,
+                'delivery_status' => 'pending',
+                'status' => 'pending_payment'
             ]);
-        }
-    }
 
+            foreach ($cart as $item) {
+
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
+                    'amount' => $item['total_amount'],
+                    'discount' => 0,
+                ]);
+            }
+
+            return $order;
+        });
+
+        Session::forget('cart');
+
+        return redirect()->route('payments.initiate', $order->id);
+
+    } catch (\Exception $e) {
+        return back()->with('error', 'Checkout failed. Please try again.');
+    }
+}
+
+public function selectLocation(Request $request)
+{
+    session(['selected_location' => $request->location_id]);
+
+    // Clear cart when location changes
     Session::forget('cart');
 
-    return redirect('/')
-        ->with('success', 'Order sent to cashier for processing!');
+    return back()->with('success', 'Location selected successfully.');
 }
+
+
 
 public function cart()
 {

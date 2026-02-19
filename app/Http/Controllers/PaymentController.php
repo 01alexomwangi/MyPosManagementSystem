@@ -23,13 +23,22 @@ class PaymentController extends Controller
             return back()->with('error', 'Order already paid.');
         }
 
-        $payment = Payment::create([
-            'order_id' => $order->id,
-            'method' => 'littlepay',
-            'transaction_reference' => strtoupper(Str::random(20)),
-            'amount' => $order->total,
-            'status' => 'pending',
-        ]);
+       $payment = Payment::firstOrCreate(
+    [
+        'order_id' => $order->id,
+        'method'   => 'littlepay',
+        'status'   => 'pending',
+    ],
+    [
+        'transaction_reference' => strtoupper(Str::random(20)),
+        'amount' => $order->total,
+    ]
+   );
+
+
+        $returnUrl = $order->source === 'online'
+                 ? route('store.order.success', $order->id)
+                 : route('orders.show', $order->id); 
 
         $url = "https://pay.little.africa/api/payments/" .
                env('LITTLEPAY_TOKEN_ID') . "/pay";
@@ -42,8 +51,10 @@ class PaymentController extends Controller
             "currency" => "KES",
             "description" => "Order #" . $order->id,
             "callbackUrl" => env('NGROK_URL') . "/payment/webhook",
-            "key" => $payment->transaction_reference,
-            "returnUrl" => route('orders.show', $order->id),
+            "key" => $payment->transaction_reference, 
+            "returnUrl" => $returnUrl,
+
+
             "payload" => [
                 "billingAddress" => [
                     "firstName" => "Customer",
@@ -101,52 +112,60 @@ class PaymentController extends Controller
 {
     Log::info('LittlePay Callback:', $request->all());
 
-      // ✅ Save log FIRST
     SystemLog::create([
         'type' => 'littlepay_callback',
         'payload' => json_encode($request->all())
     ]);
+
     try {
 
-        // ✅ Use key, not reference
-        $key = $request->key;
-        $status = $request->status;
+        $data = $request->all();
+
+        $key = $data['key'] ?? $data['reference'] ?? null;
+        $status = strtoupper($data['status'] ?? '');
 
         if (!$key) {
-            Log::error('Missing key in callback');
             return response()->json(['error' => 'Invalid callback'], 400);
         }
 
-        $payment = Payment::where('transaction_reference', $key)->first();
+        DB::transaction(function () use ($key, $status) {
 
-        if (!$payment) {
-            Log::error('Payment not found for key: ' . $key);
-            return response()->json(['error' => 'Payment not found'], 404);
-        }
+            // 🔒 Lock payment row
+            $payment = Payment::where('transaction_reference', $key)
+                              ->lockForUpdate()
+                              ->first();
 
-        // Prevent double processing
-        if ($payment->status === 'success') {
-            return response()->json(['message' => 'Already processed']);
-        }
-
-        // ✅ Check for COMPLETED (uppercase)
-        if ($status !== 'COMPLETED') {
-            $payment->update(['status' => 'failed']);
-            return response()->json(['message' => 'Payment failed']);
-        }
-
-        DB::transaction(function () use ($payment) {
-
-            $order = $payment->order()->with('items.product')->first();
-
-            if (!$order) {
-                throw new \Exception('Order not found for payment');
+            if (!$payment) {
+                throw new \Exception('Payment not found');
             }
 
+            // ✅ Idempotent protection
+            if ($payment->status === 'success') {
+                return;
+            }
+
+            // ❌ If payment failed
+            if (!in_array($status, ['COMPLETED', 'SUCCESS', 'PAID'])) {
+                $payment->update(['status' => 'failed']);
+                return;
+            }
+
+            // 🔒 Lock order row
+            $order = $payment->order()
+                             ->with('items.product')
+                             ->lockForUpdate()
+                             ->first();
+
+            if ($order->status === 'paid') {
+                return;
+            }
+
+            // 📦 Deduct stock
             foreach ($order->items as $item) {
                 $item->product->decrement('quantity', $item->quantity);
             }
 
+            // 💰 Mark paid
             $payment->update(['status' => 'success']);
             $order->update(['status' => 'paid']);
         });
@@ -159,9 +178,82 @@ class PaymentController extends Controller
 
         return response()->json(['error' => 'Server error'], 500);
     }
+  }
 
 
+  public function verify(Payment $payment)
+{
+    try {
 
+        if ($payment->status === 'success') {
+            return back()->with('info', 'Payment already verified.');
+        }
+
+        $url = "https://pay.little.africa/api/payments-v2/" .
+               $payment->transaction_reference;
+
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'X-API-KEY' => env('LITTLEPAY_API_KEY'),
+            'Accept' => 'application/json'
+        ])->get($url);
+
+        if ($response->failed()) {
+
+            \App\SystemLog::create([
+                'type' => 'verify_failed',
+                'payload' => json_encode([
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ])
+            ]);
+
+            return back()->with('error', 'Gateway verification failed.');
+        }
+
+        $data = $response->json();
+
+        $gatewayStatus = strtoupper(
+            $data['data']['status'] ?? ''
+        );
+
+        DB::transaction(function () use ($payment, $gatewayStatus) {
+
+            $order = $payment->order()
+                             ->with('items.product')
+                             ->lockForUpdate()
+                             ->first();
+
+            if (in_array($gatewayStatus, ['COMPLETED', 'SUCCESS', 'PAID'])) {
+
+                if ($order->status !== 'paid') {
+
+                    foreach ($order->items as $item) {
+                        $item->product->decrement('quantity', $item->quantity);
+                    }
+
+                    $order->update(['status' => 'paid']);
+                }
+
+                $payment->update(['status' => 'success']);
+
+            } else {
+
+                $payment->update(['status' => 'failed']);
+            }
+        });
+
+        return back()->with('success', 'Payment verified successfully.');
+
+    } catch (\Exception $e) {
+
+        \App\SystemLog::create([
+            'type' => 'verify_exception',
+            'payload' => $e->getMessage()
+        ]);
+
+        return back()->with('error', 'Verification crashed.');
+    }
 }
+
 
 }

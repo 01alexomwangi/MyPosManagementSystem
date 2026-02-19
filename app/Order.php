@@ -12,7 +12,8 @@ class Order extends Model
         'user_id',
         'location_id',
         'total',
-        'status'
+        'status',
+        'source',
     ];
 
     public function items()
@@ -34,4 +35,10 @@ class Order extends Model
     {
         return $this->belongsTo(Location::class);
     }
+
+    public function payment()
+{
+    return $this->hasOne(Payment::class);
+}
+
 }

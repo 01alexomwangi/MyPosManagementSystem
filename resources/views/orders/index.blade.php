@@ -32,7 +32,6 @@
                             @foreach($products as $product)
                                 <div class="col-md-3 mb-3">
                                     <div class="card product-card h-100">
-
                                         <div class="card-body text-center p-2">
 
                                             <div class="product-image mb-2">
@@ -74,7 +73,6 @@
                     </div>
                 </div>
 
-
                 {{-- CART --}}
                 <div class="card">
                     <div class="card-header">
@@ -101,7 +99,7 @@
 
                         <div class="row mt-4">
                             <div class="col-md-4">
-                                <h5>Total: 
+                                <h5>Total:
                                     <strong>KES <span id="grandTotal">0.00</span></strong>
                                 </h5>
                                 <input type="hidden" name="total" id="totalInput">
@@ -129,13 +127,12 @@
 
             </div>
 
-
             {{-- RIGHT SIDE --}}
             <div class="col-md-3">
 
                 <div class="card mb-3">
                     <div class="card-header">
-                        <h4>Payment</h4>
+                        <h4>POS Order Payment</h4>
                     </div>
 
                     <div class="card-body">
@@ -165,7 +162,7 @@
                 <button type="submit"
                         class="btn btn-primary btn-block"
                         id="submitBtn">
-                    Complete Sale
+                    Complete Order
                 </button>
 
             </div>
@@ -182,7 +179,6 @@ $(document).ready(function(){
 
     let cartIndex = 0;
 
-    // ADD PRODUCT
     $('.addProduct').click(function(){
 
         let id = $(this).data('id');
@@ -231,7 +227,7 @@ $(document).ready(function(){
             <td>
                 <input type="text"
                        class="form-control rowTotal"
-                       value="${price}"
+                       value="${price.toFixed(2)}"
                        readonly>
             </td>
 
@@ -249,19 +245,14 @@ $(document).ready(function(){
         calculateTotal();
     });
 
-
-    // REMOVE
     $('#cartBody').on('click','.removeRow',function(){
         $(this).closest('tr').remove();
         calculateTotal();
     });
 
-
-    // UPDATE QTY
     $('#cartBody').on('keyup change','.qty',function(){
         updateRow($(this).closest('tr'));
     });
-
 
     function updateRow(row){
         let qty = parseFloat(row.find('.qty').val()) || 0;
@@ -269,7 +260,6 @@ $(document).ready(function(){
         row.find('.rowTotal').val((qty * price).toFixed(2));
         calculateTotal();
     }
-
 
     function calculateTotal(){
         let total = 0;
@@ -282,28 +272,48 @@ $(document).ready(function(){
         $('#totalInput').val(total.toFixed(2));
 
         let paid = parseFloat($('input[name="paid_amount"]').val()) || 0;
-        $('#balance').val((paid - total).toFixed(2));
+        let balance = paid - total;
+        $('#balance').val(balance.toFixed(2));
     }
-
 
     $('input[name="paid_amount"]').on('keyup change',function(){
         calculateTotal();
     });
 
-
-    // SWITCH PAYMENT
     $('.paymentMethod').change(function(){
 
         let method = $('input[name="payment_method"]:checked').val();
 
         if(method === 'littlepay'){
             $('.cashSection').hide();
+            $('input[name="paid_amount"]').val('');
+            $('#balance').val('');
             $('#submitBtn').text('Proceed to Online Payment');
         } else {
             $('.cashSection').show();
-            $('#submitBtn').text('Complete Sale');
+            $('#submitBtn').text('Complete Order');
+        }
+    });
+
+    $('#orderForm').submit(function(e){
+
+        if($('#cartBody tr').length === 0){
+            e.preventDefault();
+            alert('Please add at least one product.');
+            return false;
         }
 
+        let method = $('input[name="payment_method"]:checked').val();
+        let paid = parseFloat($('input[name="paid_amount"]').val()) || 0;
+        let total = parseFloat($('#totalInput').val()) || 0;
+
+        if(method === 'cash' && paid < total){
+            e.preventDefault();
+            alert('Paid amount cannot be less than total.');
+            return false;
+        }
+
+        $('#submitBtn').prop('disabled', true);
     });
 
 });

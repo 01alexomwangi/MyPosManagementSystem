@@ -92,7 +92,7 @@
                 @endauth
                 @guest
                     <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Login</a></li>
-                    <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Register</a></li>
+                  {{-- <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Register</a></li> --}}
                 @endguest
             </ul>
 

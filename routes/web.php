@@ -48,6 +48,18 @@ Route::get('/payments/{order}/initiate', 'PaymentController@initiate')
 
 Route::post('/payment/webhook', 'PaymentController@webhook');
 
+Route::get('/store/orders', 'CustomerOrderController@index')
+    ->name('store.orders');
+
+    Route::get('/store/order/{id}/success', 'CustomerOrderController@success')
+    ->name('store.order.success');
+
+    
+
+
+
+
+
 
 
 
@@ -87,11 +99,21 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/reports/daily', 'ReportController@dailySales')->name('reports.daily');
-    Route::get('/reports/weekly', 'ReportController@weeklySales')->name('reports.weekly');
-    Route::get('/reports/monthly', 'ReportController@monthlySales')->name('reports.monthly');
-    Route::get('/reports/custom', 'ReportController@customReport')->name('reports.custom');
-    Route::get('/reports/receipts', 'ReportController@allReceipts')->name('reports.receipts');
+   Route::get('/reports/daily', 'ReportController@dailyOrders')
+    ->name('reports.daily');
+
+Route::get('/reports/weekly', 'ReportController@weeklyOrders')
+    ->name('reports.weekly');
+
+Route::get('/reports/monthly', 'ReportController@monthlyOrders')
+    ->name('reports.monthly');
+
+Route::get('/reports/custom', 'ReportController@customReport')
+    ->name('reports.custom');
+
+Route::get('/reports/receipts', 'ReportController@allReceipts')
+    ->name('reports.receipts');
+
 
     Route::get('/reports/export/pdf', 'ReportController@exportPdf')->name('reports.export.pdf');
     Route::get('/reports/export/excel', 'ReportController@exportExcel')->name('reports.export.excel');
@@ -145,6 +167,9 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::resource('/categories', 'CategoryController');
     Route::get('/logs', 'SystemLogController@logs')
     ->name('admin.logs');
+
+    Route::post('/payments/{payment}/verify', 'PaymentController@verify')
+    ->name('payments.verify');
 
 
 });

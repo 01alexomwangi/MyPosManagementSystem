@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Order;
 use App\OrderItem;
-use App\Product;
 use App\Payment;
+use App\Product;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -40,26 +41,35 @@ class OrderController extends Controller
         try {
 
             $user = auth()->user();
-            $total = 0;
 
-            foreach ($request->items as $item) {
-                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
+            $order = DB::transaction(function () use ($request, $user) {
 
-                if ($product->quantity < $item['quantity']) {
-                    return back()->with('error', 'Insufficient stock for ' . $product->product_name);
+                $total = 0;
+
+                foreach ($request->items as $item) {
+
+                    $product = Product::where('id', $item['product_id'])
+                                      ->where('location_id', $user->location_id)
+                                      ->lockForUpdate()
+                                      ->firstOrFail();
+
+                    if ($product->quantity < $item['quantity']) {
+                        throw new \Exception('Insufficient stock for ' . $product->product_name);
+                    }
+
+                    $total += $product->price * $item['quantity'];
                 }
-
-                $total += $product->price * $item['quantity'];
-            }
-
-            $order = DB::transaction(function () use ($request, $user, $total) {
 
                 $order = Order::create([
                     'order_number' => 'ORD-' . strtoupper(uniqid()),
                     'user_id' => $user->id,
+                    'customer_id' => null,
                     'location_id' => $user->location_id,
+                    'source' => 'pos',
                     'total' => $total,
-                    'status' => 'pending_payment'
+                    'status' => $request->payment_method === 'cash'
+                        ? 'paid'
+                        : 'pending_payment'
                 ]);
 
                 foreach ($request->items as $item) {
@@ -74,49 +84,46 @@ class OrderController extends Controller
                         'amount' => $product->price * $item['quantity'],
                         'discount' => 0,
                     ]);
+
+                    // Deduct stock only for cash
+                    if ($request->payment_method === 'cash') {
+                        $product->decrement('quantity', $item['quantity']);
+                    }
                 }
 
                 return $order;
             });
 
-            // CASH FLOW
+            // 💰 CASH PAYMENT
             if ($request->payment_method === 'cash') {
 
-                DB::transaction(function () use ($order, $request) {
-
-                    foreach ($order->items()->with('product')->get() as $item) {
-                        $item->product->decrement('quantity', $item->quantity);
-                    }
-
-                    Payment::create([
-                        'order_id' => $order->id,
-                        'method' => 'cash',
-                        'amount' => $request->paid_amount ?? $order->total,
-                        'status' => 'success'
-                    ]);
-
-                    $order->update(['status' => 'paid']);
-                });
+                Payment::create([
+                    'order_id' => $order->id,
+                    'method' => 'cash',
+                    'transaction_reference' => 'POS-' . strtoupper(Str::random(12)),
+                    'amount' => $order->total,
+                    'status' => 'paid'
+                ]);
 
                 return redirect()->route('orders.show', $order->id)
-                                 ->with('success', 'Cash payment completed successfully.');
+                                 ->with('success', 'Cash payment completed.');
             }
 
-            // ONLINE FLOW
+            // 🌐 LittlePay
             return redirect()->route('payments.initiate', $order->id);
 
         } catch (\Exception $e) {
 
             Log::error('Order Creation Failed: ' . $e->getMessage());
 
-            return back()->with('error', 'Something went wrong. Please try again.');
+            return back()->with('error', $e->getMessage());
         }
     }
 
     public function show($id)
     {
         $order = Order::with(['items.product', 'payments'])
-                        ->findOrFail($id);
+                      ->findOrFail($id);
 
         return view('orders.receipt', compact('order'));
     }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sales Report</title>
+    <title>Orders Report</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -11,7 +11,7 @@
     </style>
 </head>
 <body>
-    <h3>Sales Report</h3>
+    <h3>Orders Report</h3>
 
     @if($from && $to)
         <p>From {{ $from }} to {{ $to }}</p>
@@ -30,20 +30,28 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($sales as $sale)
+            @foreach($orders as $order)
             <tr>
-                <td>{{ $sale->id }}</td>
-                <td>{{ $sale->created_at->format('Y-m-d H:i') }}</td>
-                <td>{{ $sale->user->name }}</td>
-                <td>{{ $sale->location->name }}</td>
-                <td style="text-align: right;">{{ number_format($sale->total, 2) }}</td>
+                <td>{{ $order->id }}</td>
+                <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                <td>
+               @if($order->source === 'online')
+                  Online
+               @else
+            {{ optional($order->user)->name ?? '-' }}
+              @endif
+            </td>
+
+                <td>{{ optional($order->location)->name ?? '-' }}</td>
+
+                <td style="text-align: right;">{{ number_format($order->total, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
     <p style="text-align: right; font-weight: bold;">
-        Grand Total: {{ number_format($sales->sum('total'), 2) }}
+        Grand Total: {{ number_format($orders->sum('total'), 2) }}
     </p>
 </body>
 </html>
