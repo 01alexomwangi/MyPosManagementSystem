@@ -23,34 +23,34 @@
             <tr>
                 <th>#</th>
                 <th>Date</th>
+                <th>Status</th>
                 <th>Location</th>
                 <th>Source / Staff</th>
                 <th class="text-end">Total</th>
                 <th>Action</th>
             </tr>
         </thead>
+
         <tbody>
             @forelse($orders as $order)
                 <tr>
                     <td>{{ $order->id }}</td>
 
-                    <td>
-                        {{ $order->created_at->format('d M Y H:i') }}
-                    </td>
+                    <td>{{ $order->created_at->format('d M Y H:i') }}</td>
 
                     <td>
-                        {{ optional($order->location)->name ?? '-' }}
+                        <span class="badge bg-secondary">
+                            {{ ucfirst($order->status) }}
+                        </span>
                     </td>
+
+                    <td>{{ optional($order->location)->name ?? '-' }}</td>
 
                     <td>
                         @if($order->source === 'online')
                             <span class="badge bg-primary">Online</span>
                         @elseif($order->source === 'pos')
-                            @if($order->user)
-                                {{ $order->user->name }}
-                            @else
-                                <span class="badge bg-secondary">Pos online</span>
-                            @endif
+                            {{ optional($order->user)->name ?? 'POS' }}
                         @endif
                     </td>
 
@@ -67,7 +67,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center">
+                    <td colspan="7" class="text-center">
                         No receipts found
                     </td>
                 </tr>

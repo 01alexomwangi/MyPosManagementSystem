@@ -68,7 +68,7 @@ class OrderController extends Controller
                     'source' => 'pos',
                     'total' => $total,
                     'status' => $request->payment_method === 'cash'
-                        ? 'paid'
+                        ? 'completed'     // ✅ FIXED
                         : 'pending_payment'
                 ]);
 
@@ -85,7 +85,6 @@ class OrderController extends Controller
                         'discount' => 0,
                     ]);
 
-                    // Deduct stock only for cash
                     if ($request->payment_method === 'cash') {
                         $product->decrement('quantity', $item['quantity']);
                     }
@@ -94,7 +93,6 @@ class OrderController extends Controller
                 return $order;
             });
 
-            // 💰 CASH PAYMENT
             if ($request->payment_method === 'cash') {
 
                 Payment::create([
@@ -102,14 +100,15 @@ class OrderController extends Controller
                     'method' => 'cash',
                     'transaction_reference' => 'POS-' . strtoupper(Str::random(12)),
                     'amount' => $order->total,
-                    'status' => 'paid'
+                    'status' => 'success'
                 ]);
+
+                
 
                 return redirect()->route('orders.show', $order->id)
                                  ->with('success', 'Cash payment completed.');
             }
 
-            // 🌐 LittlePay
             return redirect()->route('payments.initiate', $order->id);
 
         } catch (\Exception $e) {
@@ -127,4 +126,22 @@ class OrderController extends Controller
 
         return view('orders.receipt', compact('order'));
     }
+
+    public function updateStatus(Request $request, Order $order)
+{
+    $request->validate([
+        'status' => 'required|in:processing,completed,cancelled',
+        'delivery_status' => 'nullable|in:pending,out_for_delivery,delivered'
+    ]);
+
+    $order->status = $request->status;
+
+    if ($order->source === 'online' && $request->delivery_status) {
+        $order->delivery_status = $request->delivery_status;
+    }
+
+    $order->save();
+
+    return back()->with('success','Order updated.');
+}
 }

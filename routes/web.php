@@ -54,6 +54,12 @@ Route::get('/store/orders', 'CustomerOrderController@index')
     Route::get('/store/order/{id}/success', 'CustomerOrderController@success')
     ->name('store.order.success');
 
+
+    Route::post('/orders/{order}/update-status', 'OrderController@updateStatus')
+    ->name('orders.updateStatus');
+
+   
+
     
 
 

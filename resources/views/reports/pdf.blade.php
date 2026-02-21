@@ -11,47 +11,54 @@
     </style>
 </head>
 <body>
-    <h3>Orders Report</h3>
 
-    @if($from && $to)
-        <p>From {{ $from }} to {{ $to }}</p>
-    @elseif($from)
-        <p>For {{ $from }}</p>
-    @endif
+<h3>Orders Report</h3>
 
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Cashier</th>
-                <th>Location</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($orders as $order)
-            <tr>
-                <td>{{ $order->id }}</td>
-                <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                <td>
-               @if($order->source === 'online')
-                  Online
-               @else
-            {{ optional($order->user)->name ?? '-' }}
-              @endif
+@if($from && $to)
+    <p>From {{ $from }} to {{ $to }}</p>
+@elseif($from)
+    <p>For {{ $from }}</p>
+@endif
+
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Source</th>
+            <th>Cashier</th>
+            <th>Location</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach($orders as $order)
+        <tr>
+            <td>{{ $order->id }}</td>
+            <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
+            <td>{{ ucfirst($order->status) }}</td>
+            <td>{{ ucfirst($order->source) }}</td>
+            <td>
+                @if($order->source === 'online')
+                    Online
+                @else
+                    {{ optional($order->user)->name ?? '-' }}
+                @endif
             </td>
+            <td>{{ optional($order->location)->name ?? '-' }}</td>
+            <td style="text-align: right;">
+                {{ number_format($order->total, 2) }}
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
 
-                <td>{{ optional($order->location)->name ?? '-' }}</td>
+<p style="text-align: right; font-weight: bold;">
+    Grand Total: {{ number_format($orders->sum('total'), 2) }}
+</p>
 
-                <td style="text-align: right;">{{ number_format($order->total, 2) }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <p style="text-align: right; font-weight: bold;">
-        Grand Total: {{ number_format($orders->sum('total'), 2) }}
-    </p>
 </body>
 </html>

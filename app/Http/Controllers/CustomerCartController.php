@@ -53,7 +53,7 @@ class CustomerCartController extends Controller
             $deliveryFee = 0;
 
             if ($request->delivery_method === 'rider') {
-                $deliveryFee = 200; // You can improve this later
+                $deliveryFee = 1; // You can improve this later
             }
 
             $finalTotal = $total + $deliveryFee;

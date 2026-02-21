@@ -135,7 +135,7 @@ class ReportController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | RECEIPTS (PAID ORDERS ONLY)
+    | RECEIPTS (COMPLETED ORDERS ONLY)
     |--------------------------------------------------------------------------
     */
     public function allReceipts(Request $request)
@@ -145,8 +145,8 @@ class ReportController extends Controller
         $from = $request->from;
         $to   = $request->to;
 
-        $query = Order::with(['items.product', 'user', 'location','payment'])
-            ->where('status', 'paid'); // Only paid orders
+        $query = Order::with(['items.product', 'user', 'location', 'payment'])
+            ->where('status', 'completed'); // FIXED HERE
 
         if ($from && !$to) {
             $query->whereDate('created_at', $from);
@@ -175,62 +175,71 @@ class ReportController extends Controller
     | ROLE FILTER
     |--------------------------------------------------------------------------
     */
-            private function applyRoleFilter($query, $user)
-            {
-                switch ($user->role) {
+    private function applyRoleFilter($query, $user)
+    {
+        switch ($user->role) {
 
-                    case 'admin':
-                        return $query;
+            case 'admin':
+                return $query;
 
-                    case 'manager':
-                        return $query->where('location_id', $user->location_id);
+            case 'manager':
+                return $query->where('location_id', $user->location_id);
 
-                    case 'cashier':
-                        return $query->where('location_id', $user->location_id);
+            case 'cashier':
+                return $query->where('location_id', $user->location_id);
 
-                    default:
-                        return $query->where('location_id', $user->location_id);
-                }
-            }
+            default:
+                return $query->where('location_id', $user->location_id);
+        }
+    }
 
+    /*
+    |--------------------------------------------------------------------------
+    | EXPORT PDF
+    |--------------------------------------------------------------------------
+    */
     public function exportPdf(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $from = $request->from;
-    $to   = $request->to;
+        $from = $request->from;
+        $to   = $request->to;
 
-    $query = Order::with(['user', 'location']);
+        $query = Order::with(['user', 'location']);
 
-    if ($from && !$to) {
-        $query->whereDate('created_at', $from);
+        if ($from && !$to) {
+            $query->whereDate('created_at', $from);
+        }
+
+        if ($from && $to) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($from)->startOfDay(),
+                Carbon::parse($to)->endOfDay(),
+            ]);
+        }
+
+        $orders = $this->applyRoleFilter($query, $user)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pdf = PDF::loadView('reports.pdf', compact('orders', 'from', 'to'));
+
+        return $pdf->download('order-report.pdf');
     }
 
-    if ($from && $to) {
-        $query->whereBetween('created_at', [
-            Carbon::parse($from)->startOfDay(),
-            Carbon::parse($to)->endOfDay(),
-        ]);
+    /*
+    |--------------------------------------------------------------------------
+    | EXPORT EXCEL
+    |--------------------------------------------------------------------------
+    */
+    public function exportExcel(Request $request)
+    {
+        $from = $request->from;
+        $to   = $request->to;
+
+        return Excel::download(
+            new SalesReportExport($from, $to),
+            'order-report.xlsx'
+        );
     }
-
-    $orders = $this->applyRoleFilter($query, $user)
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    $pdf = PDF::loadView('reports.pdf', compact('orders', 'from', 'to'));
-
-    return $pdf->download('order-report.pdf');
-}
-
-public function exportExcel(Request $request)
-{
-    $from = $request->from;
-    $to   = $request->to;
-
-    return Excel::download(
-        new SalesReportExport($from, $to),
-        'order-report.xlsx'
-    );
-}
-
 }

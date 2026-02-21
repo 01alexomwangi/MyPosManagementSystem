@@ -1,40 +1,53 @@
 @extends('layouts.store')
 
 @section('content')
-
 <div class="container py-5">
 
-    <h2>Order Successful 🎉</h2>
+<h2>Order Details</h2>
 
-    <p><strong>Order Number:</strong> {{ $order->order_number }}</p>
+<p><strong>Order Number:</strong> {{ $order->order_number }}</p>
 
-    <p>
-        <strong>Status:</strong>
-        @if($order->status === 'paid')
-            <span class="text-success">Paid</span>
-        @else
-            <span class="text-warning">Pending</span>
-        @endif
-    </p>
+<p>
+<strong>Status:</strong>
+@if($order->status === 'pending_payment')
+    <span class="text-warning">Awaiting Payment</span>
+@elseif($order->status === 'processing')
+    <span class="text-primary">Processing</span>
+@elseif($order->status === 'completed')
+    <span class="text-success">Completed</span>
+@elseif($order->status === 'cancelled')
+    <span class="text-danger">Cancelled</span>
+@endif
+</p>
 
-    <p><strong>Delivery Method:</strong> {{ ucfirst($order->delivery_method) }}</p>
+@if($order->source === 'online')
+<p>
+<strong>Delivery Status:</strong>
+@if($order->delivery_status === 'pending')
+    Pending
+@elseif($order->delivery_status === 'out_for_delivery')
+    Out For Delivery
+@elseif($order->delivery_status === 'delivered')
+    Delivered
+@endif
+</p>
+@endif
 
-    <p><strong>Delivery Fee:</strong> KES {{ number_format($order->delivery_fee, 2) }}</p>
+<hr>
 
-    <p><strong>Total Paid:</strong> KES {{ number_format($order->total, 2) }}</p>
+<h4>Items</h4>
 
-    <hr>
+@foreach($order->items as $item)
+<div>
+    {{ $item->product->product_name }}
+    x {{ $item->quantity }}
+    - KES {{ number_format($item->amount, 2) }}
+</div>
+@endforeach
 
-    <h4>Items:</h4>
+<hr>
 
-    @foreach($order->items as $item)
-        <div>
-            {{ $item->product->product_name }}
-            x {{ $item->quantity }}
-            - KES {{ number_format($item->amount, 2) }}
-        </div>
-    @endforeach
+<p><strong>Total:</strong> KES {{ number_format($order->total, 2) }}</p>
 
 </div>
-
 @endsection

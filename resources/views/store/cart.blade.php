@@ -120,9 +120,9 @@
                                    type="radio"
                                    name="delivery_method"
                                    value="rider"
-                                   data-fee="200">
+                                   data-fee="1">
                             <label class="form-check-label">
-                                Rider Delivery (Ksh 200)
+                                Rider Delivery (Ksh 1)
                             </label>
                         </div>
                     </div>

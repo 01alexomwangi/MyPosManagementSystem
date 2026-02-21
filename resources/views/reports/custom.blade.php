@@ -80,14 +80,17 @@
                 {{-- ORDER STATUS --}}
                 <td>
                     @switch($order->status)
-                        @case('paid')
-                            <span class="badge bg-success">Paid</span>
-                            @break
                         @case('pending_payment')
-                            <span class="badge bg-warning text-dark">Pending</span>
+                            <span class="badge bg-warning text-dark">Pending Payment</span>
                             @break
-                        @case('failed')
-                            <span class="badge bg-danger">Failed</span>
+                        @case('processing')
+                            <span class="badge bg-primary">Processing</span>
+                            @break
+                        @case('completed')
+                            <span class="badge bg-success">Completed</span>
+                            @break
+                        @case('cancelled')
+                            <span class="badge bg-danger">Cancelled</span>
                             @break
                         @default
                             <span class="badge bg-secondary">
@@ -144,7 +147,7 @@
                     @if($payment)
                         @switch($payment->status)
                             @case('success')
-                                <span class="badge bg-success">Paid</span>
+                                <span class="badge bg-success">Success</span>
                                 @break
                             @case('pending')
                                 <span class="badge bg-warning text-dark">Pending</span>
@@ -168,26 +171,61 @@
 
                 {{-- VERIFY BUTTON --}}
                 <td>
-                    @if(
-                        auth()->check() &&
-                        auth()->user()->role === 'admin' &&
-                        $payment &&
-                        $payment->method === 'littlepay' &&
-                        $payment->status === 'pending'
-                    )
-                        <form method="POST"
-                              action="{{ route('payments.verify', $payment->id) }}"
-                              onsubmit="return confirm('Are you sure you want to verify this payment?')">
-                            @csrf
-                            <button type="submit"
-                                    class="btn btn-sm btn-warning">
-                                Verify
-                            </button>
-                        </form>
-                    @else
-                        <span class="text-muted">—</span>
-                    @endif
-                </td>
+
+    {{-- ================= STATUS UPDATE (ONLINE ONLY) ================= --}}
+    @if($order->source === 'online')
+        <form method="POST"
+              action="{{ route('orders.updateStatus', $order->id) }}"
+              class="mb-1">
+            @csrf
+
+            <select name="status"
+                    onchange="this.form.submit()"
+                    class="form-select form-select-sm">
+
+                <option disabled selected>Change Status</option>
+
+                <option value="processing"
+                    {{ $order->status == 'processing' ? 'selected' : '' }}>
+                    Processing
+                </option>
+
+                <option value="completed"
+                    {{ $order->status == 'completed' ? 'selected' : '' }}>
+                    Completed
+                </option>
+
+                <option value="cancelled"
+                    {{ $order->status == 'cancelled' ? 'selected' : '' }}>
+                    Cancelled
+                </option>
+            </select>
+        </form>
+    @endif
+
+
+    {{-- ================= VERIFY (FOR RECONCILIATION) ================= --}}
+    @if(
+        auth()->check() &&
+        auth()->user()->role === 'admin' &&
+        $payment &&
+        $payment->method === 'littlepay' &&
+        $payment->status === 'pending'
+    )
+        <form method="POST"
+              action="{{ route('payments.verify', $payment->id) }}"
+              onsubmit="return confirm('Are you sure you want to verify this payment?')">
+            @csrf
+            <button type="submit"
+                    class="btn btn-sm btn-warning">
+                Verify
+            </button>
+        </form>
+    @elseif($order->source !== 'online')
+        <span class="text-muted">Handled in Shop</span>
+    @endif
+
+</td>
             </tr>
 
             @endforeach
