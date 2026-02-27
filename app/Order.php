@@ -14,6 +14,19 @@ class Order extends Model
         'total',
         'status',
         'source',
+        'delivery_method',
+        'delivery_fee',
+        'delivery_status',
+        'pickup_latitude',
+        'pickup_longitude',
+        'pickup_address',
+        'dropoff_latitude',
+        'dropoff_longitude',
+        'dropoff_address',
+        'recipient_name',
+        'recipient_mobile',
+        'delivery_notes',
+        'subtotal',
     ];
 
     public function items()
@@ -37,8 +50,13 @@ class Order extends Model
     }
 
     public function payment()
-{
-    return $this->hasOne(Payment::class);
-}
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function ride()
+    {
+        return $this->hasOne(Ride::class);
+    }
 
 }

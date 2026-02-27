@@ -30,4 +30,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+  'little' => [
+    'api_key' => env('LITTLE_API_KEY'),
+    'estimate_url' => env('LITTLE_ESTIMATE_URL'),
+    
+],
+
 ];

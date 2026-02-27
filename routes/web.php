@@ -58,6 +58,11 @@ Route::get('/store/orders', 'CustomerOrderController@index')
     Route::post('/orders/{order}/update-status', 'OrderController@updateStatus')
     ->name('orders.updateStatus');
 
+    Route::post('/estimate-delivery', 'CustomerCartController@estimateDelivery')
+     ->name('delivery.estimate');
+
+     Route::post('/cart/select-location', 'CustomerCartController@selectLocation')->name('cart.selectLocation');
+
    
 
     

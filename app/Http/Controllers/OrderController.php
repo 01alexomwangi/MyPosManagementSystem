@@ -46,19 +46,23 @@ class OrderController extends Controller
 
                 $total = 0;
 
-                foreach ($request->items as $item) {
+               
+                        foreach ($request->items as $item) {
 
-                    $product = Product::where('id', $item['product_id'])
-                                      ->where('location_id', $user->location_id)
-                                      ->lockForUpdate()
-                                      ->firstOrFail();
+                            $productQuery = Product::where('id', $item['product_id']);
 
-                    if ($product->quantity < $item['quantity']) {
-                        throw new \Exception('Insufficient stock for ' . $product->product_name);
-                    }
+                            if (!$user->isAdmin()) {
+                                $productQuery->where('location_id', $user->location_id);
+                            }
 
-                    $total += $product->price * $item['quantity'];
-                }
+                            $product = $productQuery->lockForUpdate()->firstOrFail();
+
+                            if ($product->quantity < $item['quantity']) {
+                                throw new \Exception('Insufficient stock for ' . $product->product_name);
+                            }
+
+                            $total += $product->price * $item['quantity'];
+                        }
 
                 $order = Order::create([
                     'order_number' => 'ORD-' . strtoupper(uniqid()),

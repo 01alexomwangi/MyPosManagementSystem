@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 
+use App\Location;
 use App\Product;
 use Illuminate\Http\Request;
 
@@ -11,6 +12,7 @@ class StoreController extends Controller
 {
      public function index(Request $request)
     {
+        $locations = Location::all();
     $query = Product::with('location');
 
     if ($request->filled('search')) {
@@ -22,7 +24,7 @@ class StoreController extends Controller
 
     $products = $query->paginate(12);
 
-    return view('store.index', compact('products'));
+    return view('store.index', compact('products','locations'));
     
         
     }

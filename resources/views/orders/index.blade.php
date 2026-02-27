@@ -1,40 +1,43 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid py-3">
 
     {{-- ALERTS --}}
     @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+        <div class="alert alert-danger shadow-sm">{{ session('error') }}</div>
     @endif
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
     @endif
 
     <form action="{{ route('orders.store') }}" method="POST" id="orderForm">
         @csrf
 
-        <div class="row">
+        <div class="row g-4">
 
             {{-- LEFT SIDE --}}
-            <div class="col-md-9">
+            <div class="col-lg-9">
 
                 {{-- PRODUCTS --}}
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h4>Products</h4>
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-primary">
+                            <i class="fa fa-box me-2"></i> Products
+                        </h5>
                     </div>
 
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row g-3">
 
                             @foreach($products as $product)
-                                <div class="col-md-3 mb-3">
-                                    <div class="card product-card h-100">
-                                        <div class="card-body text-center p-2">
+                                <div class="col-xl-3 col-lg-4 col-md-6">
+                                    <div class="card product-card h-100 border-0 shadow-sm rounded-4">
 
-                                            <div class="product-image mb-2">
+                                        <div class="card-body text-center p-3">
+
+                                            <div class="product-image mb-3">
                                                 @if($product->image)
                                                     <img src="{{ asset('images/products/'.$product->image) }}">
                                                 @else
@@ -42,26 +45,26 @@
                                                 @endif
                                             </div>
 
-                                            <h6 class="font-weight-bold mb-1">
+                                            <h6 class="fw-bold mb-1">
                                                 {{ $product->product_name }}
                                             </h6>
 
-                                            <div class="badge badge-primary mb-1">
+                                            <div class="badge bg-primary mb-2 px-3 py-2 rounded-pill">
                                                 KES {{ number_format($product->price,2) }}
                                             </div>
 
-                                            <div class="small text-muted mb-2">
+                                            <div class="small text-muted mb-3">
                                                 Stock: {{ $product->quantity }}
                                             </div>
 
                                             <button type="button"
-                                                    class="btn btn-success btn-sm btn-block addProduct"
+                                                    class="btn btn-success btn-sm w-100 addProduct rounded-pill"
                                                     data-id="{{ $product->id }}"
                                                     data-name="{{ $product->product_name }}"
                                                     data-price="{{ $product->price }}"
                                                     data-stock="{{ $product->quantity }}"
                                                     {{ $product->quantity <= 0 ? 'disabled' : '' }}>
-                                                Add
+                                                <i class="fa fa-plus me-1"></i> Add
                                             </button>
 
                                         </div>
@@ -74,16 +77,18 @@
                 </div>
 
                 {{-- CART --}}
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Cart</h4>
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-success">
+                            <i class="fa fa-shopping-cart me-2"></i> Cart
+                        </h5>
                     </div>
 
                     <div class="card-body">
 
                         <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead class="thead-light">
+                            <table class="table align-middle">
+                                <thead class="table-light">
                                     <tr>
                                         <th>#</th>
                                         <th>Product</th>
@@ -97,26 +102,33 @@
                             </table>
                         </div>
 
-                        <div class="row mt-4">
+                        <hr>
+
+                        <div class="row align-items-end mt-3">
                             <div class="col-md-4">
-                                <h5>Total:
-                                    <strong>KES <span id="grandTotal">0.00</span></strong>
-                                </h5>
-                                <input type="hidden" name="total" id="totalInput">
+                                <div class="bg-light p-3 rounded-4 shadow-sm">
+                                    <h4 class="mb-0 fw-bold">
+                                        Total:
+                                        <span class="text-success">
+                                            KES <span id="grandTotal">0.00</span>
+                                        </span>
+                                    </h4>
+                                    <input type="hidden" name="total" id="totalInput">
+                                </div>
                             </div>
 
                             <div class="col-md-4 cashSection">
-                                <label>Paid Amount</label>
+                                <label class="fw-semibold">Paid Amount</label>
                                 <input type="number"
                                        step="0.01"
                                        name="paid_amount"
-                                       class="form-control">
+                                       class="form-control rounded-3 shadow-sm">
                             </div>
 
                             <div class="col-md-4 cashSection">
-                                <label>Balance</label>
+                                <label class="fw-semibold">Balance</label>
                                 <input type="number"
-                                       class="form-control"
+                                       class="form-control rounded-3 shadow-sm"
                                        id="balance"
                                        readonly>
                             </div>
@@ -128,30 +140,34 @@
             </div>
 
             {{-- RIGHT SIDE --}}
-            <div class="col-md-3">
+            <div class="col-lg-3">
 
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <h4>POS Order Payment</h4>
+                <div class="card border-0 shadow-sm rounded-4 mb-3 sticky-top" style="top:20px;">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0 fw-bold text-dark">
+                            <i class="fa fa-credit-card me-2"></i> Payment
+                        </h5>
                     </div>
 
                     <div class="card-body">
 
-                        <div class="form-check">
+                        <div class="form-check mb-3 p-2 rounded-3 bg-light">
                             <input type="radio"
                                    class="form-check-input paymentMethod"
                                    name="payment_method"
                                    value="cash"
                                    checked>
-                            <label class="form-check-label">Cash</label>
+                            <label class="form-check-label fw-semibold">
+                                Cash
+                            </label>
                         </div>
 
-                        <div class="form-check">
+                        <div class="form-check p-2 rounded-3 bg-light">
                             <input type="radio"
                                    class="form-check-input paymentMethod"
                                    name="payment_method"
                                    value="littlepay">
-                            <label class="form-check-label">
+                            <label class="form-check-label fw-semibold">
                                 Little Pay (Online)
                             </label>
                         </div>
@@ -160,7 +176,7 @@
                 </div>
 
                 <button type="submit"
-                        class="btn btn-primary btn-block"
+                        class="btn btn-primary w-100 py-3 rounded-4 shadow-sm fw-bold"
                         id="submitBtn">
                     Complete Order
                 </button>

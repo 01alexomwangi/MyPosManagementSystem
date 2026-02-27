@@ -3,18 +3,22 @@
 namespace App\Http\Controllers;
 
 
+use App\Services\LittleApiService;
 use App\Order;
 use App\OrderItem;
-use App\Payment;
 use Illuminate\Support\Facades\DB;
 use App\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use App\Location;
+use Illuminate\Support\Facades\Http;
 
 class CustomerCartController extends Controller
 {
    public function checkout(Request $request)
 {
+
+
     if (!Session::has('customer_id')) {
         return redirect('/customer/login')
             ->with('error', 'Please login first.');
@@ -36,11 +40,40 @@ class CustomerCartController extends Controller
         return back()->with('error', 'Please select a location first.');
     }
 
-    $customerId = Session::get('customer_id');
+                  $customerId = Session::get('customer_id');
 
-    try {
+                  $cart = Session::get('cart', []);
+                  $subtotal = 0;
+                  foreach ($cart as $item) {
+                  $subtotal += $item['total_amount'];
+                  }
 
-        $order = DB::transaction(function () use ($cart, $customerId, $selectedLocation, $request) {
+                 
+           // 🚚 Delivery Logic
+          
+
+                 $deliveryFee = 0;
+
+                if ($request->delivery_method === 'rider') {
+                    $deliveryFee = $request->delivery_fee ?? session('delivery_fee') ?? 0;
+
+                    if ($deliveryFee <= 0) {
+                        return back()->with('error', 'Please calculate delivery first.');
+                    }
+                }
+
+                   $finalTotal = $subtotal + $deliveryFee;
+
+                    try {
+
+                   $order = DB::transaction(function () use (
+                    $cart,
+                    $customerId,
+                    $selectedLocation,
+                    $request,
+                    $finalTotal,
+                    $deliveryFee
+                ) {
 
             $total = 0;
 
@@ -49,26 +82,27 @@ class CustomerCartController extends Controller
             }
 
 
-               // 🚚 Delivery Logic
-            $deliveryFee = 0;
-
-            if ($request->delivery_method === 'rider') {
-                $deliveryFee = 1; // You can improve this later
-            }
-
-            $finalTotal = $total + $deliveryFee;
-
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(uniqid()),
                 'user_id' => null, // Online order
                 'customer_id' => $customerId,
                 'location_id' => $selectedLocation,
                 'source' => 'online',
-                 'total' => $finalTotal,
+                'total' => $finalTotal,
                 'delivery_method' => $request->delivery_method,
                 'delivery_fee' => $deliveryFee,
                 'delivery_status' => 'pending',
-                'status' => 'pending_payment'
+                'status' => 'pending_payment',
+                'pickup_latitude'   => session('pickup_latitude'),
+                'pickup_longitude'  => session('pickup_longitude'),
+                'pickup_address'    => session('pickup_address'),
+
+                'dropoff_latitude'  => session('dropoff_latitude'),
+                'dropoff_longitude' => session('dropoff_longitude'),
+                'dropoff_address'   => session('dropoff_address'),
+                'recipient_name'    => session('recipient_name'),
+                'recipient_mobile'  => session('recipient_mobile'),
+                'delivery_notes'    => session('delivery_notes'),
             ]);
 
             foreach ($cart as $item) {
@@ -91,16 +125,25 @@ class CustomerCartController extends Controller
         return redirect()->route('payments.initiate', $order->id);
 
     } catch (\Exception $e) {
-        return back()->with('error', 'Checkout failed. Please try again.');
-    }
+    return back()->with('error', 'Checkout failed: ' . $e->getMessage()); // ✅ see actual error
+}
+
+    
 }
 
 public function selectLocation(Request $request)
 {
-    session(['selected_location' => $request->location_id]);
+    
+    $location = Location::findOrFail($request->location_id);
+    
+    session([
+        'selected_location'   => $location->id,
+        'pickup_latitude'     => $location->latitude,
+        'pickup_longitude'    => $location->longitude,
+        'pickup_address'      => $location->address,
+    ]);
 
-    // Clear cart when location changes
-    Session::forget('cart');
+    
 
     return back()->with('success', 'Location selected successfully.');
 }
@@ -110,7 +153,13 @@ public function selectLocation(Request $request)
 public function cart()
 {
     $cart = Session::get('cart', []);
-    return view('store.cart', compact('cart'));
+    
+    $subtotal = 0;
+    foreach ($cart as $item) {
+        $subtotal += $item['total_amount'];
+    }
+
+    return view('store.cart', compact('cart', 'subtotal'));
 }
 
 public function clearCart()
@@ -161,7 +210,7 @@ public function clearCart()
     }
 
     $cart[$id]['total_amount'] =
-        $cart[$id]['price'] * $cart[$id]['quantity'];
+    $cart[$id]['price'] * $cart[$id]['quantity'];
 
     session()->put('cart', $cart);
 
@@ -233,8 +282,100 @@ public function updateQuantity(Request $request, $productId)
             'cartTotal' => $totalAmount
         ]);
     }
+     
 
+      public function estimateDelivery(Request $request)
+{
+    
 
+    $pickupLatitude  = session('pickup_latitude');
+    $pickupLongitude = session('pickup_longitude');
 
+if (!$pickupLatitude || !$pickupLongitude) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Pickup coordinates are missing. Please select a pickup location.'
+    ]);
 }
 
+    if (!session('selected_location')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Select location first.'
+        ]);
+    }
+
+    $request->validate([
+        'dropoff_latitude'  => 'required',
+        'dropoff_longitude' => 'required',
+        'dropoff_address'   => 'required',
+        'recipient_name'    => 'required',
+        'recipient_mobile'  => 'required',
+    ]);
+
+    try {
+
+        $pickupLatitude  = session('pickup_latitude');
+        $pickupLongitude = session('pickup_longitude');
+
+        if (!$pickupLatitude || !$pickupLongitude) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pickup coordinates are missing. Please select a pickup location.'
+            ]);
+        }
+
+        $little = new LittleApiService();
+
+        $response = $little->estimate([
+            'pickup_latitude'   => $pickupLatitude,
+            'pickup_longitude'  => $pickupLongitude,
+            'dropoff_latitude'  => $request->dropoff_latitude,
+            'dropoff_longitude' => $request->dropoff_longitude,
+            'customer_name'     => $request->recipient_name,
+            'customer_phone'    => $request->recipient_mobile,
+        ]);
+
+        if (!$response['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $response['error'] ?? 'Unable to calculate delivery.'
+            ]);
+        }
+
+        // Save in session
+        session([
+            'delivery_fee'      => $response['fee'],
+            'dropoff_latitude'  => $request->dropoff_latitude,
+            'dropoff_longitude' => $request->dropoff_longitude,
+            'dropoff_address'   => $request->dropoff_address,
+            'recipient_name'    => $request->recipient_name,
+            'recipient_mobile'  => $request->recipient_mobile,
+        ]);
+
+        // Calculate cart subtotal
+        $cart = session('cart', []);
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += $item['total_amount'];
+        }
+
+        $total = $subtotal + $response['fee'];
+
+        return response()->json([
+            'success' => true,
+            'delivery_fee' => $response['fee'],
+            'subtotal' => $subtotal,
+            'total' => $total
+        ]);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Server error.'
+        ]);
+    }
+}
+
+}

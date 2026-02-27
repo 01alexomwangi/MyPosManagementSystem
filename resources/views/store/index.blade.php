@@ -12,6 +12,31 @@
         <hr class="w-25 mx-auto">
     </div>
 
+    <!-- LOCATION SELECTOR -->
+<div class="d-flex justify-content-center mb-4">
+    <form method="POST" action="{{ route('cart.selectLocation') }}" class="d-flex gap-2 align-items-center">
+        @csrf
+        <select name="location_id" class="form-select rounded-pill" style="width:250px;" required>
+            <option disabled {{ !session('selected_location') ? 'selected' : '' }}>-- Select Branch --</option>
+            @foreach($locations as $location)
+                <option value="{{ $location->id }}"
+                    {{ session('selected_location') == $location->id ? 'selected' : '' }}>
+                    {{ $location->name }}
+                </option>
+            @endforeach
+        </select>
+        <button type="submit" class="btn btn-dark rounded-pill px-4">Select</button>
+    </form>
+</div>
+
+@if(session('selected_location'))
+    <div class="text-center mb-3">
+        <span class="badge bg-success px-3 py-2">
+            ✅ Branch Selected
+        </span>
+    </div>
+@endif
+
     <!-- PRODUCTS GRID -->
     <div class="row g-4">
         @foreach($products as $product)

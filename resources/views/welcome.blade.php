@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>POS Management System</title>
+    <link rel="icon" href="{{ asset('images/little.png') }}" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>

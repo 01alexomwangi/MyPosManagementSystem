@@ -15,6 +15,11 @@ class PaymentController extends Controller
 {
    public function initiate($orderId)
 {
+
+    //  dd([
+    //     'order_id'    => $orderId,
+    //     'order'       => Order::find($orderId),
+    // ]);
     try {
 
         $order = Order::findOrFail($orderId);
@@ -36,32 +41,37 @@ class PaymentController extends Controller
         ]
        );
 
-        $returnUrl = $order->source === 'online'
+    $returnUrl = $order->source === 'online'
                  ? route('store.order.success', $order->id)
                  : route('orders.show', $order->id); 
 
         $url = "https://pay.little.africa/api/payments/" .
                env('LITTLEPAY_TOKEN_ID') . "/pay";
 
-        $response = Http::withBasicAuth(
-            env('LITTLEPAY_CLIENT_ID'),
-            env('LITTLEPAY_CLIENT_SECRET')
-        )->post($url, [
-            "amount" => $payment->amount,
-            "currency" => "KES",
-            "description" => "Order #" . $order->id,
-            "callbackUrl" => env('NGROK_URL') . "/payment/webhook",
-            "key" => $payment->transaction_reference, 
-            "returnUrl" => $returnUrl,
-            "payload" => [
-                "billingAddress" => [
-                    "firstName" => "Customer",
-                    "lastName" => "Name",
-                    "email" => "customer@example.com",
-                    "phoneNumber" => "+254712345678"
-                ]
-            ]
-        ]);
+
+                $response = Http::withBasicAuth(
+                        env('LITTLEPAY_CLIENT_ID'),
+                        env('LITTLEPAY_CLIENT_SECRET')
+                    )
+                    ->acceptJson()
+                    ->asJson()
+                    ->post($url, [
+                        "amount" =>(int) $payment->amount,
+                        "currency" => "KES",
+                        "description" => "Order #" . $order->id,
+                        "callbackUrl" => env('NGROK_URL') . "/payment/webhook",
+                        "key" => $payment->transaction_reference,
+                        "returnUrl" => $returnUrl,
+                        "payload" => [
+                            "billingAddress" => [
+                                "firstName" => "Alex",
+                                "lastName" => "Mwangi",
+                                "email" => "alexmwangi@gmail.com",
+                                "phoneNumber" => "+254712345678",
+                                "country" => "KE"
+                            ]
+                        ]
+                    ]);
 
         if ($response->failed()) {
 

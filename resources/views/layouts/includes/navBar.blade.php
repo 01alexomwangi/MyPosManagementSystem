@@ -1,99 +1,108 @@
-<!-- Navbar -->
-<nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm mb-4">
+<!-- Modern Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm mb-4" 
+     style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+
     <div class="container-fluid">
 
-        <!-- Left: Brand -->
-        <a class="navbar-brand fw-bold me-auto" href="{{ url('/') }}">
-            Little POS
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold text-white" href="{{ url('/') }}">
+            <i class="fa fa-store me-2"></i> Little POS
         </a>
 
-        <!-- Toggler for mobile -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+        <!-- Mobile Toggle -->
+        <button class="navbar-toggler border-0" type="button" 
+                data-bs-toggle="collapse" data-bs-target="#navbarContent">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!-- Navbar collapse -->
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="collapse navbar-collapse" id="navbarContent">
 
-            <!-- Center: POS buttons + Receipts dropdown -->
-            <div class="mx-auto d-flex flex-wrap justify-content-center mb-2">
+            <!-- Center Menu -->
+            <div class="mx-auto d-flex flex-wrap justify-content-center gap-2">
 
                 <!-- Receipts Dropdown -->
-                <div class="dropdown me-2 mb-2">
-                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="receiptsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa fa-receipt"></i> Receipts
+                <div class="dropdown">
+                    <button class="btn btn-light rounded-pill px-4 shadow-sm dropdown-toggle"
+                            type="button" data-bs-toggle="dropdown">
+                        <i class="fa fa-receipt me-1"></i> Receipts
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="receiptsDropdown">
-                        <li><a class="dropdown-item" href="{{ route('reports.receipts') }}">All Receipts</a></li>
-                        <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::today()->toDateString()]) }}">Today</a></li>
-                        <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfWeek()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfWeek()->toDateString()]) }}">This Week</a></li>
-                        <li><a class="dropdown-item" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfMonth()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfMonth()->toDateString()]) }}">This Month</a></li>
+
+                    <ul class="dropdown-menu shadow border-0 rounded-4 p-2">
+                        <li><a class="dropdown-item rounded-3" href="{{ route('reports.receipts') }}">All Receipts</a></li>
+                        <li><a class="dropdown-item rounded-3" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::today()->toDateString()]) }}">Today</a></li>
+                        <li><a class="dropdown-item rounded-3" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfWeek()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfWeek()->toDateString()]) }}">This Week</a></li>
+                        <li><a class="dropdown-item rounded-3" href="{{ route('reports.receipts', ['from' => \Carbon\Carbon::now()->startOfMonth()->toDateString(), 'to' => \Carbon\Carbon::now()->endOfMonth()->toDateString()]) }}">This Month</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><button class="dropdown-item" onclick="window.print()"><i class="fa fa-print"></i> Print All</button></li>
-    
+                        <li>
+                            <button class="dropdown-item rounded-3 text-primary" onclick="window.print()">
+                                <i class="fa fa-print me-1"></i> Print All
+                            </button>
+                        </li>
                     </ul>
                 </div>
 
-                <!-- Admin-only buttons -->
                 @auth
+
                     @if(auth()->user()->isAdmin())
-                       <a href="{{ route('users.index') }}" 
-                       class="btn {{ request()->routeIs('users.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-                       <i class="fa fa-user"></i> Users
-                   </a>
 
-                  <a href="{{ route('reports.custom') }}" 
-                    class="btn {{ request()->routeIs('reports.custom') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-                   <i class="fa fa-chart-line"></i> Reports
-                    </a>
+                        <a href="{{ route('users.index') }}"
+                           class="btn btn-light rounded-pill px-4 shadow-sm {{ request()->routeIs('users.index') ? 'border border-2 border-dark' : '' }}">
+                           <i class="fa fa-user me-1"></i> Users
+                        </a>
 
-                     <a href="{{ route('admin.logs') }}"
-            class="btn {{ request()->routeIs('admin.logs') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-         <i class="fa fa-chart-line"></i> My logs
-         </a>
+                        <a href="{{ route('admin.logs') }}"
+                           class="btn btn-light rounded-pill px-4 shadow-sm {{ request()->routeIs('admin.logs') ? 'border border-2 border-dark' : '' }}">
+                           <i class="fa fa-file-alt me-1"></i> Logs
+                        </a>
+
                     @endif
 
-                    <!-- Common POS buttons -->
-                   
-           <a href="{{ route('products.index') }}"
-            class="btn {{ request()->routeIs('products.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-            <i class="fa fa-box"></i> Products
-           </a>
+                    <a href="{{ route('products.index') }}"
+                       class="btn btn-light rounded-pill px-4 shadow-sm {{ request()->routeIs('products.index') ? 'border border-2 border-dark' : '' }}">
+                       <i class="fa fa-box me-1"></i> Products
+                    </a>
 
-          <a href="{{ route('orders.index') }}"
-          class="btn {{ request()->routeIs('orders.index') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-          <i class="fa fa-cash-register"></i> Orders
-          </a>
+                    <a href="{{ route('orders.index') }}"
+                       class="btn btn-light rounded-pill px-4 shadow-sm {{ request()->routeIs('orders.index') ? 'border border-2 border-dark' : '' }}">
+                       <i class="fa fa-cash-register me-1"></i> Orders
+                    </a>
 
-          {{-- <a href="{{ route('cashier.pending') }}"
-             class="btn {{ request()->routeIs('cashier.pending') ? 'btn-warning' : 'btn-outline-warning' }} rounded-pill me-2 mb-2">
-          <i class="fa fa-clock"></i> Pending Sales
-         </a> --}}
+                    <a href="{{ route('reports.custom') }}"
+                       class="btn btn-light rounded-pill px-4 shadow-sm {{ request()->routeIs('reports.custom') ? 'border border-2 border-dark' : '' }}">
+                       <i class="fa fa-chart-line me-1"></i> My Sales
+                    </a>
 
-         <a href="{{ route('reports.custom') }}"
-            class="btn {{ request()->routeIs('reports.custom') ? 'btn-primary' : 'btn-outline-primary' }} rounded-pill me-2 mb-2">
-         <i class="fa fa-chart-line"></i> My Sales
-         </a>
                 @endauth
             </div>
 
-            <!-- Right: User info / auth -->
-            <ul class="navbar-nav ms-auto d-flex align-items-center">
+            <!-- Right User Section -->
+            <ul class="navbar-nav ms-auto align-items-center">
+
                 @auth
-                    <li class="nav-item me-2">
-                        <span class="nav-link fw-bold">{{ auth()->user()->name }}</span>
+                    <li class="nav-item me-3">
+                        <span class="text-white fw-semibold">
+                            <i class="fa fa-user-circle me-1"></i> {{ auth()->user()->name }}
+                        </span>
                     </li>
+
                     <li class="nav-item">
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                            <button class="btn btn-outline-light btn-sm rounded-pill px-3">
+                                Logout
+                            </button>
                         </form>
                     </li>
                 @endauth
+
                 @guest
-                    <li class="nav-item"><a href="{{ route('login') }}" class="nav-link">Login</a></li>
-                  {{-- <li class="nav-item"><a href="{{ route('register') }}" class="nav-link">Register</a></li> --}}
+                    <li class="nav-item">
+                        <a href="{{ route('login') }}" class="btn btn-light rounded-pill px-4">
+                            Login
+                        </a>
+                    </li>
                 @endguest
+
             </ul>
 
         </div>
