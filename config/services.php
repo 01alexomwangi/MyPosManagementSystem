@@ -31,8 +31,16 @@ return [
     ],
 
   'little' => [
-    'api_key' => env('LITTLE_API_KEY'),
+    'auth_url'   => env('LITTLE_AUTH_URL'),
+    'basic_auth' => env('LITTLE_BASIC_AUTH'),
     'estimate_url' => env('LITTLE_ESTIMATE_URL'),
+    'ride_url'       => env('LITTLE_RIDE_URL'),
+    'driver'         => env('LITTLE_DRIVER'),
+    'corporate_id'   => env('LITTLE_CORPORATE_ID'),
+    'rider_mobile'   => env('LITTLE_RIDER_MOBILE'),
+    'rider_name'     => env('LITTLE_RIDER_NAME'),
+    'rider_email'    => env('LITTLE_RIDER_EMAIL'),
+    'rider_picture'  => env('LITTLE_RIDER_PICTURE'),
     
 ],
 

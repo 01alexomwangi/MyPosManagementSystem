@@ -25,7 +25,7 @@ class OrderController extends Controller
         }
 
         $products = $query->get();
-
+    
         return view('orders.index', compact('products'));
     }
 
@@ -132,7 +132,7 @@ class OrderController extends Controller
     }
 
     public function updateStatus(Request $request, Order $order)
-{
+  {
     $request->validate([
         'status' => 'required|in:processing,completed,cancelled',
         'delivery_status' => 'nullable|in:pending,out_for_delivery,delivered'
@@ -147,5 +147,131 @@ class OrderController extends Controller
     $order->save();
 
     return back()->with('success','Order updated.');
+   }
+
+
+     public function dispatchRider(Order $order)
+    {
+    try {
+
+        // ✅ Only dispatch for rider delivery orders
+        if ($order->delivery_method !== 'rider') {
+            return back()->with('error', 'This order does not require a rider.');
+        }
+
+        // ✅ Prevent double dispatch
+        if ($order->rider_reference) {
+            return back()->with('info', 'Rider already dispatched for this order.');
+        }
+
+        $little = new \App\Services\LittleApiService();
+
+        $response = $little->requestRide([
+            'order_id'          => $order->id,
+            'recipient_name'    => $order->recipient_name,
+            'recipient_mobile'  => $order->recipient_mobile,
+            'dropoff_address'   => $order->dropoff_address,
+            'dropoff_latitude'  => $order->dropoff_latitude,
+            'dropoff_longitude' => $order->dropoff_longitude,
+            'pickup_latitude'   => $order->pickup_latitude,
+            'pickup_longitude'  => $order->pickup_longitude,
+            'pickup_address'    => $order->pickup_address,
+            'delivery_notes'    => $order->delivery_notes,
+        ]);
+
+        if (!$response['success']) {
+            return back()->with('error', 'Rider dispatch failed: ' . $response['error']);
+        }
+
+        // ✅ Save rider reference from response
+        $raw = $response['raw'];
+
+        $order->update([
+            'rider_reference'  => $raw['rideId']     ?? $raw['id']          ?? null,
+            'rider_id'         => $raw['driverId']   ?? null,
+            'rider_name'       => $raw['driverName'] ?? null,
+            'rider_mobile'     => $raw['driverPhone'] ?? null,
+            'delivery_status'  => 'dispatched',
+        ]);
+
+        return back()->with('success', 'Rider dispatched successfully!');
+
+    } catch (\Exception $e) {
+        return back()->with('error', 'Dispatch failed: ' . $e->getMessage());
+    }
+   }
+
+
+     public function rideWebhook(Request $request)
+{
+    Log::info('Little Ride Webhook:', $request->all());
+
+    try {
+        $data = $request->all();
+
+        // ✅ Get ride reference from webhook
+        $rideId = $data['rideId'] 
+               ?? $data['id'] 
+               ?? $data['ride_id'] 
+               ?? null;
+
+        if (!$rideId) {
+            return response()->json(['error' => 'No ride ID'], 400);
+        }
+
+        // ✅ Find order by rider_reference
+        $order = Order::where('rider_reference', $rideId)->first();
+
+        if (!$order) {
+            Log::error('Ride Webhook: Order not found for rideId: ' . $rideId);
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        $status = strtoupper($data['status'] ?? '');
+
+        // ✅ PHP 7.4 compatible status mapping
+        if (in_array($status, ['ACCEPTED', 'DRIVER_ACCEPTED'])) {
+            $deliveryStatus = 'accepted';
+        } elseif (in_array($status, ['PICKING_UP', 'DRIVER_ARRIVING'])) {
+            $deliveryStatus = 'picking_up';
+        } elseif (in_array($status, ['PICKED_UP', 'IN_TRANSIT'])) {
+            $deliveryStatus = 'picked_up';
+        } elseif (in_array($status, ['DELIVERED', 'COMPLETED', 'DROPOFF'])) {
+            $deliveryStatus = 'delivered';
+        } elseif (in_array($status, ['CANCELLED', 'CANCELED'])) {
+            $deliveryStatus = 'cancelled';
+        } else {
+            $deliveryStatus = $order->delivery_status; // keep current status
+        }
+
+        // ✅ Update delivery status
+        $order->update([
+            'delivery_status' => $deliveryStatus,
+            'rider_name'      => $data['driverName']  ?? $order->rider_name,
+            'rider_mobile'    => $data['driverPhone'] ?? $order->rider_mobile,
+        ]);
+
+        // ✅ If delivered — mark order as completed
+        if ($deliveryStatus === 'delivered') {
+            $order->update(['status' => 'completed']);
+        }
+
+        // ✅ If cancelled — reset so cashier can re-dispatch
+        if ($deliveryStatus === 'cancelled') {
+            $order->update([
+                'rider_reference' => null,
+                'rider_id'        => null,
+                'rider_name'      => null,
+                'rider_mobile'    => null,
+                'delivery_status' => 'pending',
+            ]);
+        }
+
+        return response()->json(['message' => 'Ride status updated']);
+
+    } catch (\Exception $e) {
+        Log::error('Ride Webhook Error: ' . $e->getMessage());
+        return response()->json(['error' => 'Server error'], 500);
+    }
 }
 }

@@ -133,9 +133,23 @@ class CustomerCartController extends Controller
 
 public function selectLocation(Request $request)
 {
-    
+    // If user selects "-- Select Branch --"
+    if (!$request->location_id) {
+
+        // Remove all location session data
+        session()->forget([
+            'selected_location',
+            'pickup_latitude',
+            'pickup_longitude',
+            'pickup_address',
+        ]);
+
+        return back()->with('error', 'You have not selected a location.');
+    }
+
+    // Otherwise find location normally
     $location = Location::findOrFail($request->location_id);
-    
+
     session([
         'selected_location'   => $location->id,
         'pickup_latitude'     => $location->latitude,
@@ -143,11 +157,8 @@ public function selectLocation(Request $request)
         'pickup_address'      => $location->address,
     ]);
 
-    
-
     return back()->with('success', 'Location selected successfully.');
 }
-
 
 
 public function cart()

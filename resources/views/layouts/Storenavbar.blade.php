@@ -21,27 +21,35 @@
 
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
 
-            <!-- LEFT SIDE (Location Selector) -->
-            <div class="d-flex align-items-center me-auto">
-                <form method="POST" action="{{ route('store.setLocation') }}" class="me-3">
-                    @csrf
-                    <select name="location_id"
-                            class="form-select form-select-sm"
-                            onchange="this.form.submit()"
-                            style="min-width: 180px;">
 
-                        <option value="">Select Location</option>
+              {{-- LOCATION--}}
+                <div class="d-flex align-items-center me-auto">
+                    <form method="POST" action="{{ route('cart.selectLocation') }}">
+                        @csrf
+                        <select name="location_id"
+                                class="form-select form-select-sm"
+                                onchange="this.form.submit()"
+                                style="min-width: 180px;">
 
-                        @foreach(\App\Location::all() as $location)
-                            <option value="{{ $location->id }}"
-                                {{ session('selected_location') == $location->id ? 'selected' : '' }}>
-                                {{ $location->name }}
-                            </option>
-                        @endforeach
+                            <option value="">-- Select Branch --</option>
 
-                    </select>
-                </form>
-            </div>
+                            @foreach(\App\Location::all() as $location)
+                                <option value="{{ $location->id }}"
+                                    {{ session('selected_location') == $location->id ? 'selected' : '' }}>
+                                    {{ $location->name }}
+                                </option>
+                            @endforeach
+
+                        </select>
+                    </form>
+
+                    {{-- ✅ Show confirmation badge --}}
+                    @if(session('selected_location'))
+                        <span class="badge bg-success ms-2 px-3 py-2">✅ Branch Selected</span>
+                    @endif
+                </div>
+
+
 
             <!-- RIGHT SIDE -->
             <ul class="navbar-nav align-items-center">

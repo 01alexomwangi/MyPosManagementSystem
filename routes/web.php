@@ -32,36 +32,35 @@ Route::post('/customer/logout', 'CustomerAuthController@logout');
 |--------------------------------------------------------------------------
 */
 
-Route::get('/cart', 'CustomerCartController@cart')->name('cart.view');
-Route::post('/cart/add/{id}', 'CustomerCartController@add')->name('cart.add');
-Route::post('/cart/update/{id}', 'CustomerCartController@updateQuantity')->name('cart.update');
-Route::post('/cart/remove/{id}', 'CustomerCartController@remove')->name('cart.remove');
-Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
-Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
+    Route::get('/cart', 'CustomerCartController@cart')->name('cart.view');
+    Route::post('/cart/add/{id}', 'CustomerCartController@add')->name('cart.add');
+    Route::post('/cart/update/{id}', 'CustomerCartController@updateQuantity')->name('cart.update');
+    Route::post('/cart/remove/{id}', 'CustomerCartController@remove')->name('cart.remove');
+    Route::post('/cart/clear', 'CustomerCartController@clearCart')->name('cart.clear');
+    Route::post('/cart/checkout', 'CustomerCartController@checkout')->name('customer.cart.checkout');
 
 
-Route::post('/orders', 'OrderController@store')->name('orders.store');
-Route::get('/orders/{id}', 'OrderController@show')->name('orders.show');
+    Route::post('/orders', 'OrderController@store')->name('orders.store');
+    Route::get('/orders/{id}', 'OrderController@show')->name('orders.show');
 
-Route::get('/payments/{order}/initiate', 'PaymentController@initiate')
-        ->name('payments.initiate');
+    Route::get('/payments/{order}/initiate', 'PaymentController@initiate')->name('payments.initiate');
 
-Route::post('/payment/webhook', 'PaymentController@webhook');
+    Route::post('/payment/webhook', 'PaymentController@webhook');
+    
+    Route::post('/ride/webhook', 'OrderController@rideWebhook');
 
-Route::get('/store/orders', 'CustomerOrderController@index')
-    ->name('store.orders');
+    Route::get('/store/orders', 'CustomerOrderController@index')->name('store.orders');
 
-    Route::get('/store/order/{id}/success', 'CustomerOrderController@success')
-    ->name('store.order.success');
+    Route::get('/store/order/{id}/success', 'CustomerOrderController@success')->name('store.order.success');
 
 
-    Route::post('/orders/{order}/update-status', 'OrderController@updateStatus')
-    ->name('orders.updateStatus');
+    Route::post('/orders/{order}/update-status', 'OrderController@updateStatus')->name('orders.updateStatus');
 
-    Route::post('/estimate-delivery', 'CustomerCartController@estimateDelivery')
-     ->name('delivery.estimate');
+    Route::post('/estimate-delivery', 'CustomerCartController@estimateDelivery')->name('delivery.estimate');
 
-     Route::post('/cart/select-location', 'CustomerCartController@selectLocation')->name('cart.selectLocation');
+    Route::post('/cart/select-location', 'CustomerCartController@selectLocation')->name('cart.selectLocation');
+
+    Route::post('/orders/{order}/dispatch-rider', 'OrderController@dispatchRider')->name('orders.dispatchRider');
 
    
 

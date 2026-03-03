@@ -27,6 +27,10 @@ class Order extends Model
         'recipient_mobile',
         'delivery_notes',
         'subtotal',
+        'rider_reference', 
+        'rider_id',         
+        'rider_name',       
+        'rider_mobile',     
     ];
 
     public function items()

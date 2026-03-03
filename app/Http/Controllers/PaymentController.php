@@ -49,6 +49,11 @@ class PaymentController extends Controller
                env('LITTLEPAY_TOKEN_ID') . "/pay";
 
 
+
+               $amountToCharge = app()->environment('local')
+              ? 1   // 👈 testing amount (KES 1)
+              : $payment->amount;
+
                 $response = Http::withBasicAuth(
                         env('LITTLEPAY_CLIENT_ID'),
                         env('LITTLEPAY_CLIENT_SECRET')
@@ -56,7 +61,7 @@ class PaymentController extends Controller
                     ->acceptJson()
                     ->asJson()
                     ->post($url, [
-                        "amount" =>(int) $payment->amount,
+                        "amount" => (int) $amountToCharge,
                         "currency" => "KES",
                         "description" => "Order #" . $order->id,
                         "callbackUrl" => env('NGROK_URL') . "/payment/webhook",
@@ -196,7 +201,13 @@ public function webhook(Request $request)
 
 public function verify(Payment $payment)
 {
+
     try {
+     
+
+        if (!$payment->gateway_reference) {
+            return back()->with('error', 'No gateway reference found. Payment may not have been processed yet.');
+        }
 
         if ($payment->status === 'success') {
             return back()->with('info', 'Payment already verified.');
@@ -235,6 +246,11 @@ public function verify(Payment $payment)
                              ->with('items.product')
                              ->lockForUpdate()
                              ->first();
+
+      // ✅ Check order exists
+            if (!$order) {
+                throw new \Exception('Order not found for this payment.');
+            }
 
             if (in_array($gatewayStatus, ['COMPLETED', 'SUCCESS', 'PAID'])) {
 

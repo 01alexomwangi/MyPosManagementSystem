@@ -54,6 +54,7 @@
                                 <th>Location</th>
                                 <th>Payment</th>
                                 <th>Pay Status</th>
+                                <th>Delivery</th>
                                 <th class="text-end">Total</th>
                                 <th>Action</th>
                             </tr>
@@ -160,10 +161,55 @@
                                     <span class="text-muted small">N/A</span>
                                 @endif
                             </td>
+                            
+                            <!-- DELIVERY STATUS -->
+                            <td>
+                                @if($order->delivery_method === 'rider')
+                                    @if($order->delivery_status === 'pending')
+                                        <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
+
+                                    @elseif($order->delivery_status === 'dispatched')
+                                        <span class="badge bg-info text-dark rounded-pill px-3">Dispatched</span>
+
+                                    @elseif($order->delivery_status === 'accepted')
+                                        <span class="badge bg-info text-dark rounded-pill px-3">Accepted</span>
+
+                                    @elseif($order->delivery_status === 'picking_up')
+                                        <span class="badge bg-primary rounded-pill px-3">Picking Up</span>
+
+                                    @elseif($order->delivery_status === 'picked_up')
+                                        <span class="badge bg-primary rounded-pill px-3">In Transit</span>
+
+                                    @elseif($order->delivery_status === 'delivered')
+                                        <span class="badge bg-success rounded-pill px-3">Delivered ✅</span>
+
+                                    @elseif($order->delivery_status === 'cancelled')
+                                        <span class="badge bg-danger rounded-pill px-3">Cancelled ❌</span>
+
+                                    @else
+                                        <span class="badge bg-secondary rounded-pill px-3">-</span>
+                                    @endif
+
+                                    {{-- ✅ Show rider details if available --}}
+                                    @if($order->rider_name)
+                                        <small class="d-block text-muted mt-1">🛵 {{ $order->rider_name }}</small>
+                                    @endif
+                                    @if($order->rider_mobile)
+                                        <small class="d-block text-muted">📞 {{ $order->rider_mobile }}</small>
+                                    @endif
+
+                                @else
+                                    <span class="text-muted small">Pickup</span>
+                                @endif
+                            </td>
+
+
 
                             <td class="text-end fw-bold">
                                 {{ number_format($order->total ?? 0, 2) }}
                             </td>
+
+                           
 
                             <!-- ACTION -->
                             <td>
@@ -210,6 +256,35 @@
                                     <small class="text-muted">Handled in Shop</small>
                                 @endif
 
+
+
+                  @if(
+                    $order->delivery_method === 'rider' &&
+                    $order->status === 'processing' &&
+                    $order->delivery_status === 'pending' &&  {{-- ✅ not yet dispatched --}}
+                    !$order->rider_reference
+                )
+                    <form method="POST"
+                        action="{{ route('orders.dispatchRider', $order->id) }}"
+                        onsubmit="return confirm('Dispatch a rider for this order?')"
+                        class="mt-2">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                            🛵 Dispatch Rider
+                        </button>
+                    </form>
+
+                @elseif($order->rider_reference)
+                    <div class="mt-2">
+                        <span class="badge bg-success px-3 py-2">✅ Rider Dispatched</span>
+                        @if($order->rider_name)
+                            <small class="d-block text-muted mt-1">{{ $order->rider_name }}</small>
+                        @endif
+                        @if($order->rider_mobile)
+                            <small class="d-block text-muted">{{ $order->rider_mobile }}</small>
+                        @endif
+                    </div>
+                @endif
                             </td>
                         </tr>
                       {{-- @endif --}}
