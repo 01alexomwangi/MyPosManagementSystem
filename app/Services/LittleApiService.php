@@ -98,7 +98,6 @@ class LittleApiService
                 "type"           => "CORPORATE",
                 "driver"         => config('services.little.driver'),
                 "upFrontPricing" => "true",
-                "callbackUrl"    => env('NGROK_URL') . "/ride/webhook",
                 "rider" => [
                     "mobileNumber" => config('services.little.rider_mobile'),
                     "name"         => config('services.little.rider_name'),
@@ -136,6 +135,9 @@ class LittleApiService
             //dd($payload);
             
             $response = Http::withToken($token) // ✅ fresh token
+              ->withHeaders([
+                 'x-callback' => env('NGROK_URL') . "/ride/webhook", // ✅ header not payload
+                    ])
                 ->post(config('services.little.ride_url'), $payload);
 
             if (!$response->successful()) {

@@ -187,11 +187,8 @@ class OrderController extends Controller
         $raw = $response['raw'];
 
         $order->update([
-            'rider_reference'  => $raw['rideId']     ?? $raw['id']          ?? null,
-            'rider_id'         => $raw['driverId']   ?? null,
-            'rider_name'       => $raw['driverName'] ?? null,
-            'rider_mobile'     => $raw['driverPhone'] ?? null,
-            'delivery_status'  => 'dispatched',
+            'rider_reference' => $raw['tripId'] ?? $raw['rideId'] ?? $raw['id'] ?? null,
+            'delivery_status' => 'dispatched',
         ]);
 
         return back()->with('success', 'Rider dispatched successfully!');
@@ -209,46 +206,42 @@ class OrderController extends Controller
     try {
         $data = $request->all();
 
-        // ✅ Get ride reference from webhook
-        $rideId = $data['rideId'] 
-               ?? $data['id'] 
-               ?? $data['ride_id'] 
-               ?? null;
+        // ✅ Little API uses 'tripId' not 'rideId'
+        $tripId = $data['tripId'] ?? null;
 
-        if (!$rideId) {
-            return response()->json(['error' => 'No ride ID'], 400);
+        if (!$tripId) {
+            return response()->json(['error' => 'No trip ID'], 400);
         }
 
         // ✅ Find order by rider_reference
-        $order = Order::where('rider_reference', $rideId)->first();
+        $order = Order::where('rider_reference', $tripId)->first();
 
         if (!$order) {
-            Log::error('Ride Webhook: Order not found for rideId: ' . $rideId);
+            Log::error('Ride Webhook: Order not found for tripId: ' . $tripId);
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        $status = strtoupper($data['status'] ?? '');
+        // ✅ Little API uses 'tripStatus' not 'status'
+        $status = strtoupper($data['tripStatus'] ?? '');
 
-        // ✅ PHP 7.4 compatible status mapping
-        if (in_array($status, ['ACCEPTED', 'DRIVER_ACCEPTED'])) {
-            $deliveryStatus = 'accepted';
-        } elseif (in_array($status, ['PICKING_UP', 'DRIVER_ARRIVING'])) {
-            $deliveryStatus = 'picking_up';
-        } elseif (in_array($status, ['PICKED_UP', 'IN_TRANSIT'])) {
-            $deliveryStatus = 'picked_up';
-        } elseif (in_array($status, ['DELIVERED', 'COMPLETED', 'DROPOFF'])) {
-            $deliveryStatus = 'delivered';
-        } elseif (in_array($status, ['CANCELLED', 'CANCELED'])) {
+        // ✅ Map Little API statuses to your delivery_status
+        if ($status === 'ARRIVED') {
+            $deliveryStatus = 'picking_up'; // driver arrived at pickup
+        } elseif ($status === 'STARTED') {
+            $deliveryStatus = 'picked_up'; // driver picked up parcel
+        } elseif ($status === 'ENDED') {
+            $deliveryStatus = 'delivered'; // delivery completed
+        } elseif ($status === 'CANCELLED') {
             $deliveryStatus = 'cancelled';
+        } elseif ($status === 'PARTIAL-DELIVERY') {
+            $deliveryStatus = 'picked_up'; // partial delivery in progress
         } else {
-            $deliveryStatus = $order->delivery_status; // keep current status
+            $deliveryStatus = $order->delivery_status;
         }
 
         // ✅ Update delivery status
         $order->update([
             'delivery_status' => $deliveryStatus,
-            'rider_name'      => $data['driverName']  ?? $order->rider_name,
-            'rider_mobile'    => $data['driverPhone'] ?? $order->rider_mobile,
         ]);
 
         // ✅ If delivered — mark order as completed
@@ -265,6 +258,8 @@ class OrderController extends Controller
                 'rider_mobile'    => null,
                 'delivery_status' => 'pending',
             ]);
+
+            Log::info('Ride cancelled: ' . ($data['Message'] ?? 'No reason given'));
         }
 
         return response()->json(['message' => 'Ride status updated']);

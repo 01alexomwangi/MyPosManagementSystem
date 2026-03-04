@@ -163,45 +163,42 @@
                             </td>
                             
                             <!-- DELIVERY STATUS -->
-                            <td>
-                                @if($order->delivery_method === 'rider')
-                                    @if($order->delivery_status === 'pending')
-                                        <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
+                                <td>
+                                    @if($order->delivery_method === 'rider')
+                                        @if($order->delivery_status === 'pending')
+                                            <span class="badge bg-warning text-dark rounded-pill px-3">Pending</span>
 
-                                    @elseif($order->delivery_status === 'dispatched')
-                                        <span class="badge bg-info text-dark rounded-pill px-3">Dispatched</span>
+                                        @elseif($order->delivery_status === 'dispatched')
+                                            <span class="badge bg-info text-dark rounded-pill px-3">🛵 Dispatched</span>
 
-                                    @elseif($order->delivery_status === 'accepted')
-                                        <span class="badge bg-info text-dark rounded-pill px-3">Accepted</span>
+                                        @elseif($order->delivery_status === 'picking_up')
+                                            <span class="badge bg-primary rounded-pill px-3">🚗 Driver Arriving</span>
 
-                                    @elseif($order->delivery_status === 'picking_up')
-                                        <span class="badge bg-primary rounded-pill px-3">Picking Up</span>
+                                        @elseif($order->delivery_status === 'picked_up')
+                                            <span class="badge bg-primary rounded-pill px-3">📦 In Transit</span>
 
-                                    @elseif($order->delivery_status === 'picked_up')
-                                        <span class="badge bg-primary rounded-pill px-3">In Transit</span>
+                                        @elseif($order->delivery_status === 'delivered')
+                                            <span class="badge bg-success rounded-pill px-3">✅ Delivered</span>
 
-                                    @elseif($order->delivery_status === 'delivered')
-                                        <span class="badge bg-success rounded-pill px-3">Delivered ✅</span>
+                                        @elseif($order->delivery_status === 'cancelled')
+                                            <span class="badge bg-danger rounded-pill px-3">❌ Cancelled</span>
 
-                                    @elseif($order->delivery_status === 'cancelled')
-                                        <span class="badge bg-danger rounded-pill px-3">Cancelled ❌</span>
+                                        @else
+                                            <span class="badge bg-secondary rounded-pill px-3">-</span>
+                                        @endif
+
+                                        {{-- Show rider details if available --}}
+                                        @if($order->rider_name)
+                                            <small class="d-block text-muted mt-1">🛵 {{ $order->rider_name }}</small>
+                                        @endif
+                                        @if($order->rider_mobile)
+                                            <small class="d-block text-muted">📞 {{ $order->rider_mobile }}</small>
+                                        @endif
 
                                     @else
-                                        <span class="badge bg-secondary rounded-pill px-3">-</span>
+                                        <span class="text-muted small">Pickup</span>
                                     @endif
-
-                                    {{-- ✅ Show rider details if available --}}
-                                    @if($order->rider_name)
-                                        <small class="d-block text-muted mt-1">🛵 {{ $order->rider_name }}</small>
-                                    @endif
-                                    @if($order->rider_mobile)
-                                        <small class="d-block text-muted">📞 {{ $order->rider_mobile }}</small>
-                                    @endif
-
-                                @else
-                                    <span class="text-muted small">Pickup</span>
-                                @endif
-                            </td>
+                                </td>
 
 
 
