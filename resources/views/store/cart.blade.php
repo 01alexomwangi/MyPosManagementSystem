@@ -286,6 +286,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const recipientName = document.getElementById('recipient_name').value;
     const recipientMobile = document.getElementById('recipient_mobile').value;
 
+
+        // ✅ Get fresh CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
     // ✅ Add this to see what's being sent
     console.log('Sending:', { dropoffLat, dropoffLng, dropoffAddr, recipientName, recipientMobile });
 
@@ -293,7 +297,7 @@ document.addEventListener("DOMContentLoaded", function() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': csrfToken
         },
         body: JSON.stringify({
             dropoff_latitude: dropoffLat,
