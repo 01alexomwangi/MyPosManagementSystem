@@ -19,6 +19,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}',         'Api\OrderController@show');
     Route::post('/orders',             'Api\OrderController@store');
 
+    // ✅ Everyone (admin, manager, cashier)
+    Route::get('/locations', 'Api\LocationController@index');
+
     // ✅ Reports — all authenticated users
     Route::get('/reports/summary', 'Api\ReportController@summary');
     Route::get('/reports/daily',   'Api\ReportController@daily');
