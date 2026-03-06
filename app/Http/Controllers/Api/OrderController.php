@@ -244,5 +244,128 @@ class OrderController extends Controller
                 'status' => $order->status,
             ]
         ]);
+    }// ✅ CREATE ONLINE ORDER (with delivery)
+public function storeOnline(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'items'                  => 'required|array|min:1',
+        'items.*.product_id'     => 'required|exists:products,id',
+        'items.*.quantity'       => 'required|numeric|min:1',
+        'payment_method'         => 'required|in:cash,littlepay',
+        'delivery_method'        => 'required|in:pickup,rider',
+
+        // ✅ Required for rider delivery
+        'recipient_name'         => 'required_if:delivery_method,rider',
+        'recipient_mobile'       => 'required_if:delivery_method,rider',
+        'dropoff_address'        => 'required_if:delivery_method,rider',
+        'dropoff_latitude'       => 'required_if:delivery_method,rider',
+        'dropoff_longitude'      => 'required_if:delivery_method,rider',
+        'delivery_fee'           => 'required_if:delivery_method,rider|numeric',
+        'delivery_notes'         => 'nullable|string',
+
+        // ✅ Pickup coordinates
+        'pickup_address'         => 'required|string',
+        'pickup_latitude'        => 'required',
+        'pickup_longitude'       => 'required',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors'  => $validator->errors()
+        ], 422);
     }
+
+    try {
+        $user = auth()->user();
+
+        $order = DB::transaction(function () use ($request, $user) {
+
+            $total = 0;
+
+            // ✅ Validate stock
+            foreach ($request->items as $item) {
+                $product = Product::where('id', $item['product_id'])
+                                  ->lockForUpdate()
+                                  ->firstOrFail();
+
+                if ($product->quantity < $item['quantity']) {
+                    throw new \Exception('Insufficient stock for ' . $product->product_name);
+                }
+
+                $total += $product->price * $item['quantity'];
+            }
+
+            // ✅ Add delivery fee for rider
+            $deliveryFee = $request->delivery_method === 'rider'
+                           ? $request->delivery_fee
+                           : 0;
+
+            $total += $deliveryFee;
+
+            // ✅ Create order
+            $order = Order::create([
+                'order_number'     => 'ORD-' . strtoupper(uniqid()),
+                'user_id'          => $user->id,
+                'location_id'      => $user->location_id,
+                'source'           => 'online',
+                'total'            => $total,
+                'status'           => 'pending_payment',
+                'delivery_method'  => $request->delivery_method,
+                'delivery_fee'     => $deliveryFee,
+                'delivery_status'  => $request->delivery_method === 'rider' ? 'pending' : null,
+                'pickup_address'   => $request->pickup_address,
+                'pickup_latitude'  => $request->pickup_latitude,
+                'pickup_longitude' => $request->pickup_longitude,
+                'recipient_name'   => $request->recipient_name,
+                'recipient_mobile' => $request->recipient_mobile,
+                'dropoff_address'  => $request->dropoff_address,
+                'dropoff_latitude' => $request->dropoff_latitude,
+                'dropoff_longitude'=> $request->dropoff_longitude,
+                'delivery_notes'   => $request->delivery_notes,
+            ]);
+
+            // ✅ Create order items
+            foreach ($request->items as $item) {
+                $product = Product::findOrFail($item['product_id']);
+
+                OrderItem::create([
+                    'order_id'   => $order->id,
+                    'product_id' => $product->id,
+                    'quantity'   => $item['quantity'],
+                    'unit_price' => $product->price,
+                    'amount'     => $product->price * $item['quantity'],
+                    'discount'   => 0,
+                ]);
+            }
+
+            return $order;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Online order created successfully',
+            'order'   => [
+                'id'              => $order->id,
+                'order_number'    => $order->order_number,
+                'total'           => $order->total,
+                'status'          => $order->status,
+                'delivery_method' => $order->delivery_method,
+                'delivery_fee'    => $order->delivery_fee,
+                'delivery_status' => $order->delivery_status,
+                'payment_method'  => $request->payment_method,
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        Log::error('API Online Order Failed: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
 }
