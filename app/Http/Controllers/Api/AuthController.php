@@ -32,7 +32,10 @@ class AuthController extends Controller
             'password' => $request->password,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $tokenResult = $user->createToken('auth_token');
+        $tokenResult->accessToken->expires_at = now()->addHours(24);
+        $tokenResult->accessToken->save();
+        $token = $tokenResult->plainTextToken;
 
         return response()->json([
             'success' => true,
@@ -73,7 +76,10 @@ class AuthController extends Controller
         // ✅ Delete old tokens
         $user->tokens()->delete();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $tokenResult = $user->createToken('auth_token');
+        $tokenResult->accessToken->expires_at = now()->addHours(24);
+        $tokenResult->accessToken->save();
+        $token = $tokenResult->plainTextToken;
 
         return response()->json([
             'success' => true,

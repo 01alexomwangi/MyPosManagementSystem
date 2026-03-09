@@ -86,6 +86,7 @@ class OrderController extends Controller
                 'rider_name'     => $order->rider_name,
                 'rider_mobile'   => $order->rider_mobile,
                 'payment'        => $order->payments->first() ? [
+                    'id'     => $order->payments->first()->id,
                     'method' => $order->payments->first()->method,
                     'status' => $order->payments->first()->status,
                     'amount' => $order->payments->first()->amount,
